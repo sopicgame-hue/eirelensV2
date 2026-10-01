@@ -80,6 +80,7 @@ export const MASSIFS: Massif[] = [
   { name: 'Dublin Mountains (Kippure)', lat: 53.2, lon: -6.32, peakM: 757, radiusKm: 4 },
   { name: 'Blackstairs (Mount Leinster)', lat: 52.6, lon: -6.79, peakM: 795, radiusKm: 3, stretch: 2.5, angleDeg: 70 },
   { name: 'Slieve Bloom', lat: 53.08, lon: -7.58, peakM: 527, radiusKm: 6, stretch: 1.6, angleDeg: 45, rugged: 0.2 },
+  { name: 'Loughanleagh (Cavan)', lat: 53.908, lon: -6.903, peakM: 344, radiusKm: 2.2, rugged: 0.1 },
 ];
 
 /**
@@ -107,6 +108,8 @@ export const CLIFF_ZONES: CliffZone[] = [
   { name: 'Howth Head', lat: 53.375, lon: -6.07, radiusKm: 3, heightM: 90 },
   { name: 'Horn Head', lat: 55.22, lon: -7.98, radiusKm: 4, heightM: 180 },
   { name: 'Downpatrick Head', lat: 54.32, lon: -9.35, radiusKm: 4, heightM: 80 },
+  // Côte sud-ouest d'Inis Mór (Dún Aonghasa, Poll na bPéist) ; le port de Kilronan (nord-est) reste en pente douce
+  { name: 'Inis Mór — falaises sud', lat: 53.112, lon: -9.76, radiusKm: 2.6, heightM: 70 },
 ];
 
 /**

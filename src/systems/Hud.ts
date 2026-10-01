@@ -1,12 +1,15 @@
 /**
  * Calcule les informations du HUD (≈ 8 fois par seconde, pas à chaque frame) :
- * nom du lieu, boussole des monuments, indication contextuelle.
+ * nom du lieu, zone, pièces, boussole des monuments, indication contextuelle.
  */
 import { uiStore } from '../ui/uiStore';
 import { wrapAngle } from '../core/math';
 import { LandmarkManager } from './LandmarkManager';
 import { Towns } from '../world/Towns';
 import { Progression } from './Progression';
+import { Zones } from './Zones';
+import { Stations } from './Stations';
+import { STATIONS } from '../config/gameConfig';
 import type { Player } from '../entities/Player';
 import type { Sheep } from '../entities/Sheep';
 
@@ -20,6 +23,8 @@ export function updateHud(opts: {
   landmarks: LandmarkManager;
   towns: Towns;
   progression: Progression;
+  zones: Zones;
+  stations: Stations;
   nearWaterForBoat: boolean;
 }) {
   const { player, sheep, camYaw, landmarks, towns, progression } = opts;
@@ -58,11 +63,17 @@ export function updateHud(opts: {
   }
   compass.sort((a, b) => a.distance - b.distance);
 
-  // Indication contextuelle
+  // Indication contextuelle (la gare passe avant le reste)
   let hint = '';
+  const st = opts.stations.nearest(px, pz);
   const dSheep = Math.hypot(sheep.pos.x - px, sheep.pos.z - pz);
-  if (player.mode === 'foot' && dSheep < 3 && sheep.state === 'follow') hint = `pet`;
+  if (st.distance < STATIONS.INTERACT_DISTANCE && !player.airborne) hint = 'train';
+  else if (player.mode === 'foot' && dSheep < 3 && sheep.state === 'follow') hint = `pet`;
   else if (player.mode === 'foot' && opts.nearWaterForBoat) hint = 'boat';
+
+  // Zone actuelle
+  const zone = opts.zones.zoneAt(px, pz);
+  const zs = progression.zoneStatus(zone.id);
 
   uiStore.patchHud({
     region,
@@ -71,6 +82,9 @@ export function updateHud(opts: {
     compass: compass.slice(0, 6),
     discovered: progression.discovered,
     total: landmarks.placed.length,
+    money: progression.money,
+    zone: { name: zone.name, color: zone.color, principalsDone: zs.principalsDone, principalsTotal: zs.principalsTotal },
     hint,
+    station: st.station.name,
   });
 }

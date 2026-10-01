@@ -26,3 +26,33 @@ body,
     transform: scale(1);
   }
 }
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Petit train qui traverse l'écran pendant un voyage */
+@keyframes train {
+  from {
+    transform: translateX(-160px);
+  }
+  to {
+    transform: translateX(min(80vw, 520px));
+  }
+}
+
+/* Panneau "Zone verrouillée" : léger balancement de panneau suspendu */
+@keyframes sway {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(1.5deg);
+  }
+}

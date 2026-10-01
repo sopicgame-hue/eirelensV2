@@ -9,6 +9,20 @@ import type { ColliderShape } from '../../world/Colliders';
 export type Province = 'Ulster' | 'Connacht' | 'Leinster' | 'Munster';
 export type LandmarkCategory = 'nature' | 'monument' | 'patrimoine' | 'ville' | 'phare';
 
+/**
+ * Importance d'un lieu (notation de la liste de départ) :
+ *   principal  ☆ : OBLIGATOIRE — tous les principaux d'une zone ouvrent la zone suivante
+ *   secondaire ◉ : rapporte des pièces
+ *   bonus      ♥ : lieu caché / difficile d'accès, pour les curieux
+ */
+export type LandmarkTier = 'principal' | 'secondaire' | 'bonus';
+
+export const TIERS: Record<LandmarkTier, { icon: string; label: string; order: number }> = {
+  principal: { icon: '☆', label: 'Principal', order: 0 },
+  secondaire: { icon: '◉', label: 'Secondaire', order: 1 },
+  bonus: { icon: '♥', label: 'Bonus', order: 2 },
+};
+
 /** Tampon de terrain en coordonnées LOCALES (dx, dz relatifs au monument, en unités). */
 export interface LocalStamp {
   kind: 'flatten' | 'island' | 'mesa';
@@ -17,6 +31,12 @@ export interface LocalStamp {
   radius: number;
   /** Hauteur ABSOLUE en unités monde (optionnel pour flatten). */
   height?: number;
+  /**
+   * Hauteur RELATIVE au sol naturel à l'origine du monument (ex : -1 = lac 1 u plus
+   * bas que le monument). Ignorée si `height` est donné. Sans les deux : sol naturel
+   * au centre du tampon.
+   */
+  offset?: number;
   blend?: number;
 }
 
@@ -37,6 +57,8 @@ export interface LandmarkDef {
   county: string;
   province: Province;
   category: LandmarkCategory;
+  /** Importance : voir LandmarkTier ci-dessus. La ZONE est déduite des coordonnées (world/data/zones.ts). */
+  tier: LandmarkTier;
   /** Coordonnées GPS réelles (Google Maps : clic droit → copier "lat, lon"). */
   lat: number;
   lon: number;
@@ -62,10 +84,18 @@ export interface LandmarkDef {
   };
   /** Rayon (u) autour du monument sans arbres ni maisons générés. */
   clearRadius: number;
+  /** Zones dégagées supplémentaires, en local (ex : un lac décoratif loin du centre). */
+  clearAreas?: { dx: number; dz: number; radius: number }[];
   /** Modifications du relief (aplanir, îlot, plateau…). */
   terrain?: LocalStamp[];
   /** Obstacles en coordonnées locales (tournés avec le modèle). */
   colliders?: ColliderShape[];
   /** Construit le modèle. L'origine (0,0,0) = le sol au point lat/lon. */
   build?: (ctx: BuildContext) => THREE.Object3D;
+  /**
+   * Animation optionnelle (dauphin qui saute, cascade, drapeau…), appelée à chaque
+   * frame tant que le modèle est chargé. `obj` = l'objet renvoyé par build().
+   * Règle iPad : aucune allocation (new …) ici ; retrouve tes pièces via obj.userData.
+   */
+  animate?: (obj: THREE.Object3D, dt: number, time: number) => void;
 }

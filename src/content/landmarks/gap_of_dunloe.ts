@@ -11,6 +11,7 @@ export const gapOfDunloe: LandmarkDef = {
   county: 'Kerry',
   province: 'Munster',
   category: 'nature',
+  tier: 'secondaire',
   lat: 52.0333,
   lon: -9.6333,
   description: "Un col étroit creusé par les glaciers entre deux massifs.",

@@ -11,6 +11,7 @@ export const dunluceCastle: LandmarkDef = {
   county: 'Antrim',
   province: 'Ulster',
   category: 'patrimoine',
+  tier: 'secondaire',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 55.2081,
   lon: -6.5794,

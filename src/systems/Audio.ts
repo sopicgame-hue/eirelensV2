@@ -188,6 +188,39 @@ export class Audio {
     });
   }
 
+  /** Sifflet de train : deux notes douces superposées, puis un "tchou-tchou" filtré. */
+  whistle() {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (const freq of [587, 740]) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.08, t + 0.08);
+      g.gain.setValueAtTime(0.08, t + 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      o.connect(g).connect(this.sfxGain);
+      o.start(t);
+      o.stop(t + 1.2);
+    }
+    for (let i = 0; i < 6; i++) {
+      const src = ctx.createBufferSource();
+      src.buffer = this.noiseBuffer(0.12);
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = 500;
+      const g = ctx.createGain();
+      const s = t + 1.2 + i * 0.22;
+      g.gain.setValueAtTime(i % 2 ? 0.12 : 0.2, s);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.18);
+      src.connect(f).connect(g).connect(this.sfxGain);
+      src.start(s);
+    }
+  }
+
   blip(freq = 880) {
     const ctx = this.ctx;
     if (!ctx) return;

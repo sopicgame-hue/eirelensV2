@@ -21,6 +21,7 @@ export const giantsCauseway: LandmarkDef = {
   county: 'Antrim',
   province: 'Ulster',
   category: 'nature',
+  tier: 'principal',
   lat: 55.2408,
   lon: -6.5116,
   rotationDeg: -140,

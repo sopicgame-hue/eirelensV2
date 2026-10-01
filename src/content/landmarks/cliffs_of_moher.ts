@@ -17,6 +17,7 @@ export const cliffsOfMoher: LandmarkDef = {
   county: 'Clare',
   province: 'Munster',
   category: 'nature',
+  tier: 'principal',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 52.9708,
   lon: -9.4262,

@@ -13,6 +13,7 @@ import { WORLD, TERRAIN } from '../config/gameConfig';
 import { lonLatToWorld, projectFlat, worldBounds, kmToUnits } from './geo';
 import { TOWNS } from './data/towns';
 import { ROUTES, RouteStep } from './data/roads';
+import { EXTRA_RIVERS } from './data/rivers';
 
 interface GeoData {
   land: number[][];
@@ -70,6 +71,11 @@ export class WorldGrid {
     for (const river of data.rivers) {
       const w = Math.max(MIN_RIVER_WIDTH, kmToUnits(river.widthM / 1000));
       this.stampPolyline(projectFlat(river.line), w / 2, 1);
+    }
+    // Rivières tracées à la main (data/rivers.ts), au format [lat, lon]
+    for (const river of EXTRA_RIVERS) {
+      const w = Math.max(MIN_RIVER_WIDTH, kmToUnits(river.widthM / 1000));
+      this.stampPolyline(projectFlat(river.line.flatMap(([lat, lon]) => [lon, lat])), w / 2, 1);
     }
     this.buildRoads();
     this.computeCoastDistance();

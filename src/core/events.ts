@@ -10,7 +10,9 @@
 export interface GameEvents {
   photoTaken: { photoId: string; landmarkId: string | null; stars: number; withSheep: boolean; isNewLandmark: boolean };
   landmarkDiscovered: { landmarkId: string };
-  vehicleUnlocked: { vehicleId: string };
+  moneyEarned: { amount: number; total: number; landmarkId: string };
+  vehicleBought: { vehicleId: string };
+  zoneUnlocked: { zoneId: string };
   vehicleChanged: { vehicleId: string };
   sheepSays: { text: string; duration?: number };
   toast: { text: string; icon?: string };

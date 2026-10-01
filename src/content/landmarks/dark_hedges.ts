@@ -14,6 +14,7 @@ export const darkHedges: LandmarkDef = {
   county: 'Antrim',
   province: 'Ulster',
   category: 'nature',
+  tier: 'secondaire',
   lat: 55.1346,
   lon: -6.3806,
   rotationDeg: 75,

@@ -14,6 +14,7 @@ const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window
 export function TouchControls() {
   const device = useUi((s) => s.device);
   const screen = useUi((s) => s.screen);
+  const hint = useUi((s) => s.hud.hint);
   if (!isTouchDevice || device === 'gamepad') return null;
   const inPhoto = screen === 'photo';
   return (
@@ -33,7 +34,8 @@ export function TouchControls() {
             <TButton key="vehicle" action="vehicle" label="🚲" />
             <TButton key="photo" action="photo" label="📷" big />
             <TButton key="run" action="run" label="🐑" />
-            <TButton key="confirm" action="confirm" label="A" />
+            {/* Bouton contextuel : 🚂 près d'une gare, ♥ près du mouton */}
+            <TButton key="confirm" action="confirm" label={hint === 'train' ? '🚂' : hint === 'pet' ? '♥' : 'A'} />
             <TButton key="map" action="map" label="🗺" />
             <TButton key="pause" action="pause" label="☰" />
           </>

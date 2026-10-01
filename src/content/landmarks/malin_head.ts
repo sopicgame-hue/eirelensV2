@@ -11,6 +11,7 @@ export const malinHead: LandmarkDef = {
   county: 'Donegal',
   province: 'Ulster',
   category: 'nature',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 55.379,
   lon: -7.3763,

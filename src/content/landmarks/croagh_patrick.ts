@@ -11,6 +11,7 @@ export const croaghPatrick: LandmarkDef = {
   county: 'Mayo',
   province: 'Connacht',
   category: 'nature',
+  tier: 'secondaire',
   lat: 53.7597,
   lon: -9.6587,
   description: "Une montagne sacrée en forme de cône qui domine Clew Bay.",

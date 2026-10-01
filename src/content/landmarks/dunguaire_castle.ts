@@ -11,6 +11,7 @@ export const dunguaireCastle: LandmarkDef = {
   county: 'Galway',
   province: 'Connacht',
   category: 'patrimoine',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 53.1475,
   lon: -8.9362,

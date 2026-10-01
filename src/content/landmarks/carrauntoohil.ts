@@ -11,6 +11,7 @@ export const carrauntoohil: LandmarkDef = {
   county: 'Kerry',
   province: 'Munster',
   category: 'nature',
+  tier: 'bonus',
   lat: 51.9993,
   lon: -9.7425,
   description: "Le plus haut sommet d'Irlande (1 038 m), au cœur des MacGillycuddy's Reeks.",

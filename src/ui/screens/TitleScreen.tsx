@@ -5,6 +5,7 @@ import { MenuItem } from '../components';
 import { useMenuNav } from '../useGameInput';
 import { hasSave } from '../../core/save';
 import { toggleFullscreen } from '../fullscreen';
+import { DEV } from '../../config/gameConfig';
 
 export function LoadingScreen() {
   const loading = useUi((s) => s.loading);
@@ -36,6 +37,8 @@ export function TitleScreen() {
     ...(canContinue ? [{ label: '▶ Continuer', run: () => getGame()?.continueGame() }] : []),
     { label: '✨ Nouvelle partie', run: () => getGame()?.newGame() },
     { label: '⛶ Plein écran', run: () => toggleFullscreen() },
+    // Outil de création : voir un monument / véhicule seul (docs/GUIDE_MODELISATION.md)
+    ...(DEV.ATELIER_BUTTON ? [{ label: '🛠 Atelier 3D', run: () => (window.location.search = '?atelier') }] : []),
   ];
   const [index, setIndex] = useMenuNav(items.length, { onConfirm: (i) => items[i].run() });
   return (

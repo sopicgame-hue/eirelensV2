@@ -11,6 +11,7 @@ export const mussendenTemple: LandmarkDef = {
   county: 'Londonderry',
   province: 'Ulster',
   category: 'patrimoine',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 55.1703,
   lon: -6.8115,

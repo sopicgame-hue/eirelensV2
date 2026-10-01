@@ -11,6 +11,7 @@ export const poulnabrone: LandmarkDef = {
   county: 'Clare',
   province: 'Munster',
   category: 'patrimoine',
+  tier: 'secondaire',
   lat: 53.0487,
   lon: -9.14,
   rotationDeg: 200,

@@ -1,6 +1,6 @@
 /**
  * Phare du Fastnet (Cork) — tour de granite sur un rocher en pleine mer.
- * Accessible uniquement en currach. Le rocher est un tampon "island".
+ * Accessible uniquement en bateau. Le rocher est un tampon "island".
  * La lanterne (brique lighthouse) utilise le matériau partagé "glow" : elle brille la nuit.
  */
 import * as THREE from 'three';
@@ -14,6 +14,7 @@ export const fastnet: LandmarkDef = {
   county: 'Cork',
   province: 'Munster',
   category: 'phare',
+  tier: 'bonus',
   lat: 51.389,
   lon: -9.603,
   requires: 'boat',

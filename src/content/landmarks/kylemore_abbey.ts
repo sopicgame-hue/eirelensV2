@@ -11,6 +11,7 @@ export const kylemoreAbbey: LandmarkDef = {
   county: 'Galway',
   province: 'Connacht',
   category: 'patrimoine',
+  tier: 'secondaire',
   lat: 53.5615,
   lon: -9.889,
   description: "Un château néogothique au bord d'un lac du Connemara, devenu abbaye bénédictine.",

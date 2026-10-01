@@ -17,6 +17,7 @@ import { VehicleMenu } from './screens/VehicleMenu';
 import { CustomizeScreen } from './screens/CustomizeScreen';
 import { AlbumScreen } from './screens/AlbumScreen';
 import { MapScreen } from './screens/MapScreen';
+import { TrainScreen, TravelScreen } from './screens/TrainScreen';
 import { TouchControls } from './TouchControls';
 
 const SCREENS: Record<Screen, React.FC | null> = {
@@ -29,6 +30,8 @@ const SCREENS: Record<Screen, React.FC | null> = {
   pause: PauseMenu,
   customize: CustomizeScreen,
   vehicles: VehicleMenu,
+  train: TrainScreen,
+  travel: TravelScreen,
 };
 
 export function GameView() {

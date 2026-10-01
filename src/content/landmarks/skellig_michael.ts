@@ -2,7 +2,7 @@
  * Skellig Michael (Kerry) — île-rocher à deux pics, monastère de cellules en
  * pierre sèche (clocháns) sur une terrasse, et quelques macareux.
  * Île exagérée par rapport au réel pour rester lisible dans l'Irlande miniature.
- * Accessible uniquement en currach.
+ * Accessible uniquement en bateau.
  */
 import { LandmarkDef } from './types';
 import { ModelBuilder } from '../../models/ModelBuilder';
@@ -13,6 +13,7 @@ export const skelligMichael: LandmarkDef = {
   county: 'Kerry',
   province: 'Munster',
   category: 'patrimoine',
+  tier: 'bonus',
   lat: 51.772,
   lon: -10.539,
   requires: 'boat',

@@ -11,6 +11,7 @@ export const hookHead: LandmarkDef = {
   county: 'Wexford',
   province: 'Leinster',
   category: 'phare',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 52.1318,
   lon: -6.9342,

@@ -11,6 +11,7 @@ export const mizenHead: LandmarkDef = {
   county: 'Cork',
   province: 'Munster',
   category: 'nature',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 51.455,
   lon: -9.8092,

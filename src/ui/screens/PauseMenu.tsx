@@ -19,6 +19,8 @@ export function PauseMenu() {
     { label: '👕 Personnaliser', run: () => game.setScreen('customize') },
     { label: '📖 Album', run: () => game.setScreen('album') },
     { label: '🗺 Carte', run: () => game.setScreen('map') },
+    // Échappatoire : coincé sur un îlot, perdu en mer… on rentre à la gare de la zone
+    { label: '🚉 Retour à la gare', run: () => void game.returnToStation() },
     { label: '⛶ Plein écran', run: () => toggleFullscreen() },
     { label: `🎨 Qualité : ${s.quality === 'high' ? 'Haute' : 'Économie'}`, run: () => set({ quality: s.quality === 'high' ? 'low' : 'high' }), left: () => set({ quality: 'low' }), right: () => set({ quality: 'high' }) },
     {

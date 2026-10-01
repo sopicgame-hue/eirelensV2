@@ -30,6 +30,12 @@ function create() {
     road: new THREE.MeshLambertMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
     /** Éléments lumineux (lanterne de phare, fenêtres éclairées) : non éclairé = brille la nuit. */
     glow: new THREE.MeshBasicMaterial({ color: 0xfff1a8 }),
+    /** Eau décorative des monuments (cascades, lacs de montagne, bassins) : couleur portée par le matériau. */
+    water: new THREE.MeshPhongMaterial({ color: 0x3aa6c8, specular: 0xffffff, shininess: 70, transparent: true, opacity: 0.88, depthWrite: false }),
+    /** Écume blanche des cascades et des vagues. */
+    foam: new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }),
+    /** Bronze (statues) : légèrement brillant. */
+    bronze: new THREE.MeshPhongMaterial({ color: 0x8c6a3f, specular: 0xd9b77a, shininess: 40 }),
   };
 }
 

@@ -16,6 +16,9 @@ import { moveEntity, MoveParams, WorldRefs } from './movement';
 
 export type PlayerMode = 'foot' | 'ride' | 'vehicle';
 
+/** Distances d'anticipation du relief pour l'altitude du ULM (u). */
+const LOOK_AHEAD = [10, 25, 45];
+
 const FOOT: MoveParams = { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: PLAYER.MAX_WADE_DEPTH };
 
 export class Player {
@@ -30,6 +33,10 @@ export class Player {
   distance = 0;
   /** Le joueur vient de se cogner (pour un petit effet / son). */
   bumped = false;
+  /** Le joueur vient de buter contre le mur d'une zone verrouillée. */
+  zoneBlocked = false;
+  /** ULM : en vol (sinon il roule au sol). */
+  airborne = false;
   rig: CharacterRig;
   readonly root = new THREE.Group();
   private vel = new THREE.Vector2();
@@ -51,7 +58,7 @@ export class Player {
     parent.remove(old);
     disposeCharacter(this.rig);
     this.rig = buildCharacter(c);
-    // Garder la place exacte (ex : siège du véhicule, pose cachée dans la Mini)
+    // Garder la place exacte (ex : siège du véhicule, pose cachée)
     this.rig.root.position.copy(old.position);
     this.rig.root.rotation.copy(old.rotation);
     this.rig.root.visible = old.visible;
@@ -68,7 +75,10 @@ export class Player {
   /** Paramètres de déplacement du mode courant. */
   private params(): MoveParams {
     if (this.mode === 'vehicle' && this.vehicle) {
-      return { radius: this.vehicle.radius, maxSlope: this.vehicle.maxSlope, medium: this.vehicle.medium, maxWade: 0.15 };
+      const v = this.vehicle;
+      // ULM : 'air' en vol, terrestre quand il roule au sol
+      const medium = v.medium === 'air' ? (this.airborne ? 'air' : 'land') : v.medium;
+      return { radius: v.radius, maxSlope: v.maxSlope, medium, maxWade: 0.15 };
     }
     if (this.mode === 'ride') return { ...FOOT, radius: 0.6 };
     return FOOT;
@@ -81,6 +91,13 @@ export class Player {
   update(dt: number, input: Input, camYaw: number, enabled: boolean) {
     this.time += dt;
     this.bumped = false;
+    this.zoneBlocked = false;
+    // ULM en vol + menu / appareil photo ouvert : il reste en l'air, immobile (pause photo)
+    if (!enabled && this.airborne) {
+      this.speed = 0;
+      this.updateVisuals(dt);
+      return;
+    }
     const mx = enabled ? input.move.x : 0;
     const my = enabled ? input.move.y : 0;
     const mag = Math.min(1, Math.hypot(mx, my));
@@ -105,6 +122,7 @@ export class Player {
       } else {
         this.speed = approach(this.speed, 0, v.acceleration * 1.5 * dt);
       }
+      if (v.medium === 'air' && v.flight) this.updateFlightState(v.flight.takeoffSpeed, mag);
       dx = Math.sin(this.heading) * this.speed * dt;
       dz = Math.cos(this.heading) * this.speed * dt;
     } else {
@@ -124,6 +142,7 @@ export class Player {
       const r = moveEntity(this.world, this.pos.x, this.pos.z, dx, dz, p);
       const moved = Math.hypot(r.x - this.pos.x, r.z - this.pos.z);
       this.distance += moved;
+      if (r.zoneBlocked) this.zoneBlocked = true;
       if (r.blocked && moved < Math.hypot(dx, dz) * 0.3) {
         this.bumped = true;
         if (this.mode === 'vehicle') this.speed *= 0.5;
@@ -134,15 +153,46 @@ export class Player {
     }
     const ground = this.world.hf.heightAt(this.pos.x, this.pos.z);
     const targetY = p.medium === 'water' ? WORLD.WATER_LEVEL : Math.max(ground, WORLD.WATER_LEVEL - PLAYER.MAX_WADE_DEPTH);
-    this.pos.y = this.mode === 'vehicle' ? damp(this.pos.y, targetY, 12, dt) : targetY;
+    if (this.mode === 'vehicle' && this.vehicle?.flight) this.updateAltitude(dt, ground, this.vehicle.flight);
+    else this.pos.y = this.mode === 'vehicle' ? damp(this.pos.y, targetY, 12, dt) : targetY;
 
     this.updateVisuals(dt);
+  }
+
+  // ------------------------------------------------------------------ vol
+  /** Décollage / atterrissage du ULM selon la vitesse et le sol en dessous. */
+  private updateFlightState(takeoffSpeed: number, stick: number) {
+    const overWater = this.world.hf.heightAt(this.pos.x, this.pos.z) < WORLD.WATER_LEVEL + 0.3;
+    if (!this.airborne && this.speed >= takeoffSpeed) this.airborne = true;
+    if (!this.airborne) return;
+    const canLand = !overWater && this.world.hf.slopeAt(this.pos.x, this.pos.z) < (this.vehicle?.maxSlope ?? 0.5);
+    if (canLand && stick < 0.1 && this.speed < takeoffSpeed * 0.5) this.airborne = false; // atterrissage
+    else if (!canLand) this.speed = Math.max(this.speed, takeoffSpeed * 0.6); // on ne s'arrête pas en l'air
+  }
+
+  /** Altitude du ULM : suit le relief (avec anticipation) à la hauteur de croisière. */
+  private updateAltitude(dt: number, ground: number, f: { cruiseHeight: number; climbRate: number }) {
+    const floor = Math.max(ground, WORLD.WATER_LEVEL);
+    if (!this.airborne) {
+      // Au sol (ou en train d'atterrir) : descente douce jusqu'au sol
+      this.pos.y = this.pos.y > floor + 0.05 ? Math.max(floor, this.pos.y - f.climbRate * dt) : floor;
+      return;
+    }
+    let ahead = floor;
+    const fx = Math.sin(this.heading);
+    const fz = Math.cos(this.heading);
+    for (const d of LOOK_AHEAD) ahead = Math.max(ahead, this.world.hf.heightAt(this.pos.x + fx * d, this.pos.z + fz * d));
+    const target = ahead + f.cruiseHeight;
+    const step = f.climbRate * dt;
+    this.pos.y = this.pos.y < target ? Math.min(target, this.pos.y + step) : Math.max(target, this.pos.y - step * 0.6);
+    this.pos.y = Math.max(this.pos.y, floor + 0.5); // jamais dans le relief
   }
 
   // ------------------------------------------------------------- véhicules
   enterVehicle(def: VehicleDef, x: number, z: number) {
     this.exitVehicleVisual();
     this.mode = 'vehicle';
+    this.airborne = false;
     this.vehicle = def;
     this.vehicleModel = def.build();
     this.vehicleModel.name = `vehicle:${def.id}`;
@@ -159,6 +209,7 @@ export class Player {
   exitVehicle(x: number, z: number) {
     this.exitVehicleVisual();
     this.mode = 'foot';
+    this.airborne = false;
     this.vehicle = null;
     this.teleport(x, z);
   }
@@ -174,6 +225,13 @@ export class Player {
     this.rig.root.visible = true;
   }
 
+  /** Atelier 3D : anime le véhicule et la pose du pilote à la vitesse donnée, sans rien déplacer. */
+  showcase(dt: number, speed: number) {
+    this.time += dt;
+    this.speed = speed;
+    this.updateVisuals(dt);
+  }
+
   // ------------------------------------------------------------ animation
   private updateVisuals(dt: number) {
     const r = this.rig;
@@ -183,7 +241,8 @@ export class Player {
       this.vehicleModel.rotation.y = this.heading;
       this.vehicle.animate?.(this.vehicleModel, this.speed, dt, t);
       this.animPhase += this.speed * dt * 1.6;
-      this.pose(this.vehicle.rider.pose === 'bike' ? 'bike' : 'sit');
+      const rp = this.vehicle.rider.pose;
+      this.pose(rp === 'bike' ? 'bike' : rp === 'ride' ? 'ride' : 'sit');
       return;
     }
     const root = r.root;
@@ -202,7 +261,7 @@ export class Player {
     else this.pose('idle');
   }
 
-  private pose(kind: 'idle' | 'walk' | 'sit' | 'bike' | 'photo') {
+  private pose(kind: 'idle' | 'walk' | 'sit' | 'ride' | 'bike' | 'photo') {
     const r = this.rig;
     const s = Math.sin(this.animPhase);
     const k = Math.min(1, this.speed / PLAYER.WALK_SPEED);
@@ -235,6 +294,13 @@ export class Player {
         r.legR.rotation.z = -0.25;
         r.armL.rotation.x = -0.9;
         r.armR.rotation.x = -0.9;
+        break;
+      case 'ride':
+        // À califourchon : jambes écartées de part et d'autre de la monture
+        r.legL.rotation.set(-0.35, 0, 0.55);
+        r.legR.rotation.set(-0.35, 0, -0.55);
+        r.armL.rotation.x = -0.8 + Math.sin(this.animPhase) * 0.05;
+        r.armR.rotation.x = -0.8 + Math.sin(this.animPhase) * 0.05;
         break;
       case 'bike':
         r.legL.rotation.x = -1.0 + s * 0.5;

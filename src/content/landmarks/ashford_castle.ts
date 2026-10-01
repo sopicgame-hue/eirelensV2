@@ -11,6 +11,7 @@ export const ashfordCastle: LandmarkDef = {
   county: 'Mayo',
   province: 'Connacht',
   category: 'patrimoine',
+  tier: 'bonus',
   lat: 53.5361,
   lon: -9.2836,
   description: "Un château victorien au bord du Lough Corrib, devenu hôtel de luxe.",

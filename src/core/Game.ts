@@ -9,7 +9,7 @@
  *     publiques "COMMANDES UI" en bas de ce fichier, et lit uiStore.
  */
 import * as THREE from 'three';
-import { RENDER, TIME, SAVE, SHEEP, PLAYER, TERRAIN } from '../config/gameConfig';
+import { RENDER, TIME, SAVE, SHEEP, PLAYER, TERRAIN, STATIONS, ZONE_UI, ECONOMY } from '../config/gameConfig';
 import { events } from './events';
 import { SaveData, loadSave, writeSave, defaultSave, deleteSave } from './save';
 import { savePhoto, clearPhotos } from './photoStore';
@@ -27,17 +27,22 @@ import { LandmarkManager, landmarkStamps } from '../systems/LandmarkManager';
 import { PhotoSystem } from '../systems/PhotoSystem';
 import { Progression } from '../systems/Progression';
 import { Audio } from '../systems/Audio';
+import { Zones } from '../systems/Zones';
+import { Stations, stationStamps } from '../systems/Stations';
+import { ZoneGates } from '../systems/ZoneGates';
 import { updateHud } from '../systems/Hud';
 import { Player } from '../entities/Player';
 import { Sheep } from '../entities/Sheep';
 import { CameraRig } from '../entities/CameraRig';
-import { findNearest } from '../entities/movement';
+import { findNearest, WorldRefs } from '../entities/movement';
 import { LANDMARKS } from '../content/landmarks';
 import { getVehicle, FOOT_ID } from '../content/vehicles';
 import { Customization } from '../content/customization';
 import { uiStore, Screen } from '../ui/uiStore';
+import type { ZoneId } from '../world/data/zones';
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export class Game {
   readonly input = new Input();
@@ -61,6 +66,11 @@ export class Game {
   progression!: Progression;
   player!: Player;
   sheep!: Sheep;
+  zones = new Zones();
+  stations!: Stations;
+  gates!: ZoneGates;
+  /** Références passées à moveEntity / findNearest (relief, obstacles, mur des zones). */
+  world!: WorldRefs;
 
   private raf = 0;
   private last = 0;
@@ -73,6 +83,11 @@ export class Game {
   /** "Galoper" n'est pris en compte que s'il a été appuyé EN JEU (B sert aussi à fermer les menus). */
   private runArmed = false;
   private disposed = false;
+  private time = 0;
+  private eye = new THREE.Vector3();
+  private traveling = false;
+  /** Zone de chaque lieu (calculée une fois à partir des coordonnées). */
+  private landmarkZone = new Map<string, ZoneId>();
   private offEvents: (() => void)[] = [];
 
   constructor(private canvas: HTMLCanvasElement) {}
@@ -90,29 +105,33 @@ export class Game {
 
     this.grid = new WorldGrid();
     await progress(0.35, 'Soulèvement des montagnes…');
-    this.hf = new Heightfield(this.grid, landmarkStamps(LANDMARKS));
+    this.hf = new Heightfield(this.grid, [...landmarkStamps(LANDMARKS), ...stationStamps()]);
     this.rig = new CameraRig(window.innerWidth / window.innerHeight, this.hf);
     this.rig.invertY = this.save.settings.invertY;
     this.resize();
 
     await progress(0.5, 'Construction des villages…');
     this.landmarks = new LandmarkManager(LANDMARKS, this.hf, this.colliders);
-    this.towns = new Towns(this.hf, this.colliders, (x, z) => this.landmarks.isReserved(x, z));
+    for (const p of this.landmarks.placed) this.landmarkZone.set(p.def.id, this.zones.zoneAt(p.x, p.z).id);
+    this.stations = new Stations(this.hf, this.colliders);
+    const reserved = (x: number, z: number) => this.landmarks.isReserved(x, z) || this.stations.isReserved(x, z);
+    this.towns = new Towns(this.hf, this.colliders, reserved);
     this.terrain = new TerrainChunks(this.hf);
     this.applyQuality();
-    this.scatter = new Scatter(this.hf, this.colliders, this.terrain, (x, z) => this.landmarks.isReserved(x, z) || this.towns.isInTown(x, z));
+    this.scatter = new Scatter(this.hf, this.colliders, this.terrain, (x, z) => reserved(x, z) || this.towns.isInTown(x, z));
+    this.gates = new ZoneGates(this.grid, this.hf, this.zones);
 
     await progress(0.65, 'Remplissage de l’océan…');
     this.dayNight = new DayNight(this.scene);
     this.water = new Water();
-    this.scene.add(this.terrain.group, this.scatter.group, this.towns.group, this.landmarks.group, this.water.mesh, buildRoadMesh(this.grid));
+    this.scene.add(this.terrain.group, this.scatter.group, this.towns.group, this.landmarks.group, this.stations.group, this.gates.group, this.water.mesh, buildRoadMesh(this.grid));
 
     await progress(0.75, 'Réveil de Paddy…');
     this.photo = new PhotoSystem(this.hf, this.landmarks, this.colliders);
-    this.progression = new Progression(this.save);
-    const world = { hf: this.hf, colliders: this.colliders };
-    this.player = new Player(world, this.save.customization);
-    this.sheep = new Sheep(world, this.save.sheepName, this.save.customization.sheepAccessory, this.save.customization.sheepAccessoryColor);
+    this.progression = this.makeProgression();
+    this.world = { hf: this.hf, colliders: this.colliders, canEnter: this.zones.canEnter };
+    this.player = new Player(this.world, this.save.customization);
+    this.sheep = new Sheep(this.world, this.save.sheepName, this.save.customization.sheepAccessory, this.save.customization.sheepAccessoryColor);
     this.scene.add(this.player.root, this.sheep.root);
     this.placeFromSave();
 
@@ -129,14 +148,42 @@ export class Game {
     this.setScreen('title');
   }
 
+  private makeProgression() {
+    const p = new Progression(this.save, (id) => this.landmarkZone.get(id) ?? 'sud');
+    p.migrateLegacy();
+    p.checkZones(true); // (si la liste des lieux a changé depuis la sauvegarde)
+    this.syncZones(p);
+    return p;
+  }
+
+  /** Recopie les zones ouvertes vers le mur invisible et les barrières. */
+  private syncZones(p = this.progression) {
+    this.zones.unlocked = new Set(this.save.zones);
+    this.zones.openAll = p.unlockAll;
+    this.gates?.refresh((id) => this.zones.isOpen(id));
+  }
+
   private placeFromSave() {
     const s = this.save;
     this.hour = s.timeOfDay;
-    this.player.teleport(s.player.x, s.player.z, s.player.rotY);
-    const spot = findNearest({ hf: this.hf, colliders: this.colliders }, s.player.x, s.player.z, { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: 0.2 }, 40);
-    if (spot) this.player.teleport(spot.x, spot.z, s.player.rotY);
+    let { x, z, rotY } = s.player;
+    // Nouvelle partie (position NaN/null), ou sauvegarde dans une zone fermée → devant la gare de la 1re zone
+    if (x == null || z == null || !Number.isFinite(x) || !Number.isFinite(z) || !this.zones.canEnter(x, z)) {
+      const a = this.stations.arrival(this.zones.ordered[0].id);
+      ({ x, z } = a);
+      rotY = a.heading;
+    }
+    this.player.teleport(x, z, rotY);
+    const spot = findNearest(this.world, x, z, { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: 0.2 }, 40);
+    if (spot) this.player.teleport(spot.x, spot.z, rotY);
+    else if (getVehicle(s.vehicle)?.medium !== 'water' || !this.progression.owns(s.vehicle)) {
+      // Sauvegardé en plein vol au-dessus de la mer (ULM) : retour à la gare de la zone
+      const zone = this.zones.zoneAt(x, z).id;
+      const a = this.stations.arrival(this.zones.isOpen(zone) ? zone : this.zones.ordered[0].id);
+      this.player.teleport(a.x, a.z, a.heading);
+    }
     this.sheep.placeNear(this.player.pos.x - 2, this.player.pos.z - 2);
-    this.rig.snapTo(this.player.pos, s.player.rotY);
+    this.rig.snapTo(this.player.pos, rotY);
     // Un véhicule sauvegardé est restauré (sauf s'il n'est plus valide)
     if (s.vehicle !== FOOT_ID) this.selectVehicle(s.vehicle, true);
   }
@@ -147,12 +194,19 @@ export class Game {
         uiStore.set({ sheepBubble: { text, until: performance.now() + (duration ?? 4200) } });
         this.audio.bleat(0.9 + Math.random() * 0.25);
       }),
-      events.on('vehicleUnlocked', ({ vehicleId }) => {
+      events.on('vehicleBought', ({ vehicleId }) => {
         const v = getVehicle(vehicleId);
         if (!v) return;
-        uiStore.toast(`Nouveau moyen de transport : ${v.name} ! (bouton X / touche V)`, v.icon, 6000);
+        uiStore.toast(`${v.name} acheté ! Il t’attend dans le menu des véhicules.`, v.icon, 5000);
         this.audio.jingle();
-        setTimeout(() => this.sheep.say('unlock', true), 1500);
+        this.persist();
+      }),
+      events.on('zoneUnlocked', ({ zoneId }) => {
+        const z = this.zones.get(zoneId as ZoneId);
+        this.syncZones();
+        uiStore.toast(`Nouvelle zone ouverte : ${z.name} ! Prends le train à la gare la plus proche.`, '🚂', 8000);
+        this.audio.jingle();
+        setTimeout(() => this.sheep.say('zoneOpen', true), 2500);
       }),
       events.on('landmarkDiscovered', () => this.audio.jingle()),
     );
@@ -178,8 +232,10 @@ export class Game {
 
     // Monde
     const p = this.player.pos;
+    this.time += dt;
     this.terrain.update(p.x, p.z);
     this.landmarks.update(p.x, p.z);
+    this.landmarks.animate(dt, this.time);
     this.sheep.isNight = this.dayNight.daylight < 0.2;
     this.sheep.update(dt, this.player, this.rig.camera.position);
     this.dayNight.update(this.hour, p, this.rig.camera);
@@ -196,10 +252,10 @@ export class Game {
     this.hudTimer -= dt;
     if (this.hudTimer <= 0 && (screen === 'play' || screen === 'photo')) {
       this.hudTimer = 0.12;
-      updateHud({ player: this.player, sheep: this.sheep, camYaw: this.rig.yaw, hour: this.hour, landmarks: this.landmarks, towns: this.towns, progression: this.progression, nearWaterForBoat: this.nearWaterForBoat() });
+      updateHud({ player: this.player, sheep: this.sheep, camYaw: this.rig.yaw, hour: this.hour, landmarks: this.landmarks, towns: this.towns, progression: this.progression, zones: this.zones, stations: this.stations, nearWaterForBoat: this.nearWaterForBoat() });
     }
     this.saveTimer -= dt;
-    if (this.saveTimer <= 0 && screen !== 'title' && screen !== 'loading') {
+    if (this.saveTimer <= 0 && screen !== 'title' && screen !== 'loading' && screen !== 'travel') {
       this.saveTimer = SAVE.AUTOSAVE_SECONDS;
       this.persist();
     }
@@ -224,7 +280,10 @@ export class Game {
     }
 
     this.rig.applyLookDelta(input.lookDelta.x, input.lookDelta.y, false);
+    const wasAirborne = this.player.airborne;
     this.player.update(dt, input, this.rig.yaw, true);
+    if (this.player.airborne && !wasAirborne) this.sheep.say('takeoff', true);
+    if (this.player.zoneBlocked) this.showZoneBanner();
     const v = this.player.vehicle;
     this.rig.updateFollow(dt, input.look, input.zoom, this.player.pos, this.player.heading, this.player.speed > 1, v?.cameraDistance ?? 0, this.player.mode !== 'foot');
 
@@ -238,6 +297,11 @@ export class Game {
     }
 
     if (!actionsAllowed) return;
+    const station = this.stations.nearest(this.player.pos.x, this.player.pos.z);
+    if (input.pressed('confirm') && station.distance < STATIONS.INTERACT_DISTANCE && !this.player.airborne) {
+      this.setScreen('train');
+      return;
+    }
     if (input.pressed('confirm') && this.player.mode === 'foot' && dSheep < 3) {
       this.sheep.jump();
       this.sheep.say('pet', true);
@@ -258,7 +322,10 @@ export class Game {
     const input = this.input;
     this.player.update(dt, input, this.rig.yaw, false);
     this.rig.applyLookDelta(input.lookDelta.x, input.lookDelta.y, true);
-    this.rig.updatePhoto(dt, input, this.player.pos);
+    // Œil à hauteur du pilote (cheval, ULM…), pas au niveau du sol du véhicule
+    const v = this.player.mode === 'vehicle' ? this.player.vehicle : null;
+    this.eye.copy(this.player.pos).y += v ? v.rider.offset[1] : this.player.mode === 'ride' ? 0.78 : 0;
+    this.rig.updatePhoto(dt, input, this.eye);
     this.evalTimer -= dt;
     if (this.evalTimer <= 0) {
       this.evalTimer = 0.1;
@@ -292,6 +359,7 @@ export class Game {
     }
     this.player.photoMode = true;
     this.player.rig.root.visible = false;
+    if (this.player.vehicleModel) this.player.vehicleModel.visible = false; // sinon le véhicule bouche l'objectif
     uiStore.set({ photo: { ...uiStore.get().photo, flash: 0, target: null } });
     this.rig.enterPhoto(this.rig.yaw);
     this.setScreen('photo');
@@ -307,6 +375,7 @@ export class Game {
 
   private exitPhoto() {
     this.player.photoMode = false;
+    if (this.player.vehicleModel) this.player.vehicleModel.visible = true;
     this.sheep.stopPhotobomb();
     this.player.rig.root.visible = this.player.mode !== 'vehicle' || this.player.vehicle?.rider.pose !== 'hidden';
     this.rig.exitPhoto();
@@ -322,10 +391,11 @@ export class Game {
     const lm = e.landmark?.def ?? null;
     const title = lm ? lm.name : 'Souvenir d’Irlande';
     let isNew = false;
-    if (lm) isNew = this.progression.recordLandmarkPhoto(lm.id, e.stars, id).isNew;
+    let earned = 0;
+    if (lm) ({ isNew, earned } = this.progression.recordLandmarkPhoto(lm, e.stars, id));
     this.save.stats.photos++;
     if (e.withSheep) this.save.stats.sheepPhotos++;
-    uiStore.set({ photo: { ...uiStore.get().photo, flash: performance.now() }, lastPhoto: { dataUrl, title, stars: e.stars, isNew, withSheep: e.withSheep } });
+    uiStore.set({ photo: { ...uiStore.get().photo, flash: performance.now() }, lastPhoto: { dataUrl, title, stars: e.stars, isNew, withSheep: e.withSheep, earned } });
     events.emit('photoTaken', { photoId: id, landmarkId: lm?.id ?? null, stars: e.stars, withSheep: e.withSheep, isNewLandmark: isNew });
     setTimeout(() => {
       if (isNew) this.sheep.say('discover', true);
@@ -338,7 +408,7 @@ export class Game {
 
   // ===================================================================== UTILITAIRES
   private nearWaterForBoat() {
-    if (!this.progression.isUnlocked('currach') || this.player.mode !== 'foot') return false;
+    if (!this.progression.owns('currach') || this.player.mode !== 'foot') return false;
     const p = this.player.pos;
     for (let a = 0; a < 8; a++) {
       const x = p.x + Math.cos(a * 0.785) * 6;
@@ -405,7 +475,7 @@ export class Game {
     deleteSave();
     void clearPhotos();
     this.save = defaultSave();
-    this.progression = new Progression(this.save);
+    this.progression = this.makeProgression();
     // Ordre important : le mouton d'abord (il peut être assis dans le véhicule), puis le joueur
     this.sheep.standUp(this.player.pos.x, this.player.pos.z);
     if (this.player.mode === 'vehicle') this.player.exitVehicle(this.player.pos.x, this.player.pos.z);
@@ -425,7 +495,7 @@ export class Game {
     this.sheep.setAccessory(c.sheepAccessory, c.sheepAccessoryColor);
     if (this.player.mode === 'vehicle' && this.player.vehicleModel && this.player.vehicle?.sheepSeat) {
       const seat = this.player.vehicle.sheepSeat;
-      this.sheep.sitIn(this.player.vehicleModel, seat.offset, seat.scale);
+      this.sheep.sitIn(this.player.vehicleModel, seat.offset, seat.scale, seat.pose);
     }
     this.persist();
   }
@@ -435,7 +505,7 @@ export class Game {
    * @returns message d'erreur à afficher, ou null si OK.
    */
   selectVehicle(id: string, silent = false): string | null {
-    const world = { hf: this.hf, colliders: this.colliders };
+    const world = this.world;
     const p = this.player.pos;
     if (this.player.mode === 'ride') {
       this.player.mode = 'foot';
@@ -444,25 +514,109 @@ export class Game {
     if (id === FOOT_ID) {
       if (this.player.mode !== 'vehicle') return null;
       const spot = findNearest(world, p.x, p.z, { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: 0.2 }, 18);
-      if (!spot) return 'Trop loin du rivage pour descendre ! Approche-toi de la terre.';
+      if (!spot) return this.player.airborne ? 'Impossible de se poser ici : survole la terre ferme.' : 'Trop loin du rivage pour descendre ! Approche-toi de la terre.';
       this.sheep.standUp(spot.x + 1.2, spot.z + 1.2); // d'abord : il est attaché au modèle du véhicule
       this.player.exitVehicle(spot.x, spot.z);
       return null;
     }
     const v = getVehicle(id);
     if (!v) return 'Véhicule inconnu.';
-    if (!this.progression.isUnlocked(id)) return `Débloqué après ${v.unlockAt} monuments photographiés.`;
-    const params = { radius: v.radius, maxSlope: v.maxSlope, medium: v.medium, maxWade: 0.15 } as const;
+    if (!this.progression.owns(id)) return `${v.name} n’est pas encore acheté (${v.price} ${ECONOMY.CURRENCY}).`;
+    if (this.player.airborne) return 'Pose d’abord le ULM (relâche le stick au-dessus de la terre).';
+    // Le ULM se pose au sol pour décoller : on le place comme un véhicule terrestre
+    const medium = v.medium === 'air' ? 'land' : v.medium;
+    const params = { radius: v.radius, maxSlope: v.maxSlope, medium, maxWade: 0.15 } as const;
     const spot = findNearest(world, p.x, p.z, params, v.medium === 'water' ? 18 : 8);
-    if (!spot) return v.medium === 'water' ? 'Il faut être au bord de l’eau pour mettre le currach à l’eau.' : 'Pas assez de place ici pour ce véhicule.';
+    if (!spot) return v.medium === 'water' ? 'Il faut être au bord de l’eau pour mettre le bateau à l’eau.' : 'Pas assez de place ici pour ce véhicule.';
     if (this.player.mode === 'vehicle' && this.sheep.state === 'seated') this.sheep.standUp(p.x, p.z);
     this.player.enterVehicle(v, spot.x, spot.z);
-    if (v.sheepSeat && this.player.vehicleModel) this.sheep.sitIn(this.player.vehicleModel, v.sheepSeat.offset, v.sheepSeat.scale);
+    if (v.sheepSeat && this.player.vehicleModel) this.sheep.sitIn(this.player.vehicleModel, v.sheepSeat.offset, v.sheepSeat.scale, v.sheepSeat.pose);
     if (!silent) {
-      this.sheep.say(v.medium === 'water' ? 'boat' : 'vehicle', true);
+      this.sheep.say(v.medium === 'water' ? 'boat' : v.id === 'horse' ? 'horse' : 'vehicle', true);
       events.emit('vehicleChanged', { vehicleId: id });
     }
     return null;
+  }
+
+  /** Achète un véhicule. @returns message d'erreur, ou null si OK. */
+  buyVehicle(id: string): string | null {
+    const err = this.progression.buy(id);
+    if (!err) setTimeout(() => this.sheep.say('unlock', true), 1200);
+    return err;
+  }
+
+  /** Prend le train jusqu'à la gare de la zone `to` (écran noir, téléportation, arrivée). */
+  async takeTrain(to: ZoneId) {
+    if (!this.zones.isOpen(to) || this.traveling) return;
+    const from = this.stations.nearest(this.player.pos.x, this.player.pos.z).station;
+    if (this.player.mode === 'vehicle') {
+      const err = this.selectVehicle(FOOT_ID);
+      if (err) {
+        uiStore.toast(err, '⚠️', 4000);
+        this.setScreen('play');
+        return;
+      }
+    }
+    this.traveling = true;
+    if (this.player.mode === 'ride') {
+      this.player.mode = 'foot';
+      this.sheep.state = 'follow';
+    }
+    uiStore.set({ travel: { from: from.name, to: this.stations.get(to).name } });
+    this.setScreen('travel');
+    this.audio.whistle();
+    await wait(STATIONS.TRAVEL_MS * 0.4);
+    const a = this.stations.arrival(to);
+    const spot = findNearest(this.world, a.x, a.z, { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: 0.2 }, 20) ?? a;
+    this.player.teleport(spot.x, spot.z, a.heading);
+    this.sheep.placeNear(spot.x - 1.5, spot.z - 1.5);
+    this.rig.snapTo(this.player.pos, a.heading);
+    this.terrain.update(spot.x, spot.z, Infinity);
+    this.landmarks.update(spot.x, spot.z, Infinity);
+    await wait(STATIONS.TRAVEL_MS * 0.6);
+    this.traveling = false;
+    uiStore.set({ travel: null });
+    this.setScreen('play');
+    this.persist();
+    setTimeout(() => this.sheep.say('train', true), 1200);
+  }
+
+  /**
+   * "Je suis coincé" (menu pause) : retour à la gare de la zone où l'on se trouve
+   * (ou de la première zone si l'on est hors des zones ouvertes). Le véhicule est rangé.
+   */
+  async returnToStation() {
+    if (this.traveling) return;
+    const here = this.zones.zoneAt(this.player.pos.x, this.player.pos.z).id;
+    const zone = this.zones.isOpen(here) ? here : this.zones.ordered[0].id;
+    if (this.player.mode === 'vehicle') {
+      // Ranger le véhicule sans chercher de rivage : on part de toute façon
+      if (this.sheep.state === 'seated') this.sheep.standUp(this.player.pos.x, this.player.pos.z);
+      this.player.exitVehicle(this.player.pos.x, this.player.pos.z);
+    }
+    await this.takeTrain(zone);
+  }
+
+  /** Panneau "Zone verrouillée" (au plus un à la fois). */
+  private showZoneBanner() {
+    const now = performance.now();
+    const cur = uiStore.get().zoneBanner;
+    if (cur && cur.until > now) return;
+    const h = this.player.heading;
+    const p = this.player.pos;
+    const zone = this.zones.zoneAt(p.x + Math.sin(h) * 3, p.z + Math.cos(h) * 3);
+    if (this.zones.isOpen(zone.id)) return; // (bord de carte, pas une zone)
+    const prev = this.progression.previousZone(zone.id);
+    let text = 'Cette zone s’ouvrira plus tard dans l’aventure.';
+    if (prev) {
+      const st = this.progression.zoneStatus(prev.id);
+      text = this.zones.isOpen(prev.id)
+        ? `Photographie tous les lieux ☆ principaux de « ${prev.name} » pour l’ouvrir (${st.principalsDone}/${st.principalsTotal}).`
+        : `Ouvre d’abord « ${prev.name} ».`;
+    }
+    uiStore.set({ zoneBanner: { title: zone.name, text, until: now + ZONE_UI.BANNER_SECONDS * 1000 } });
+    this.sheep.say('zoneLocked');
+    this.input.rumble(0.15, 80);
   }
 
   updateSettings(partial: Partial<SaveData['settings']>) {
@@ -484,7 +638,7 @@ export class Game {
       const err = this.selectVehicle(FOOT_ID);
       if (err) return `Impossible : ${err}`;
     }
-    const world = { hf: this.hf, colliders: this.colliders };
+    const world = this.world;
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2;
       const spot = findNearest(world, p.x + Math.sin(a) * distance, p.z + Math.cos(a) * distance, { radius: PLAYER.RADIUS, maxSlope: PLAYER.MAX_SLOPE, medium: 'land', maxWade: 0.2 }, 6);
@@ -500,10 +654,23 @@ export class Game {
     return 'Aucun point accessible à cette distance (essaie une autre distance, ou le bateau).';
   }
 
-  /** Débloque tous les véhicules pour CETTE session (rien n'est sauvegardé). */
+  /** Ouvre toutes les zones et offre tous les véhicules pour CETTE session (rien n'est sauvegardé). */
   debugUnlockAll() {
     this.progression.unlockAll = true;
-    return 'Tous les véhicules sont débloqués jusqu’au rechargement de la page.';
+    this.syncZones();
+    return 'Zones et véhicules débloqués jusqu’au rechargement de la page.';
+  }
+
+  /** Ajoute des pièces (sauvegardé). */
+  debugMoney(amount = 1000) {
+    this.save.money += amount;
+    return `${this.save.money} ${ECONOMY.CURRENCY}`;
+  }
+
+  /** Zone et gare la plus proche du joueur (vérifier un tracé de frontière). */
+  debugWhere() {
+    const p = this.player.pos;
+    return { zone: this.zones.zoneAt(p.x, p.z).id, gare: this.stations.nearest(p.x, p.z).station.name, x: Math.round(p.x), z: Math.round(p.z) };
   }
 
   /** Change l'heure (0-24). */

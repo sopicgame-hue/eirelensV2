@@ -1,6 +1,7 @@
 /**
  * Viseur de l'appareil photo + flash + aperçu de la dernière photo prise.
  */
+import { ECONOMY } from '../config/gameConfig';
 import React, { useEffect, useState } from 'react';
 import { useUi, uiStore } from './uiStore';
 import { Key, Stars } from './components';
@@ -80,7 +81,12 @@ export function LastPhotoCard() {
         <span className="truncate text-sm font-extrabold">{last.title}</span>
         <Stars n={last.stars} size="text-base" />
       </div>
-      {last.isNew && <div className="text-xs font-black text-[#2f8f5b]">NOUVEAU MONUMENT !</div>}
+      {last.isNew && <div className="text-xs font-black text-[#2f8f5b]">NOUVEAU LIEU !</div>}
+      {last.earned > 0 && (
+        <div className="text-sm font-black text-[#b8860b]">
+          +{last.earned} {ECONOMY.ICON} {last.isNew ? '' : '(meilleure photo)'}
+        </div>
+      )}
       {last.withSheep && <div className="text-xs font-bold text-[#8e44ad]">🐑 Avec la participation de ton mouton</div>}
     </div>
   );

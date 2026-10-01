@@ -21,9 +21,11 @@ Documents de référence :
 |---|---|
 | `docs/GDD.md` | Game design : vision, règles, contenus. **Le "quoi" et le "pourquoi".** |
 | `docs/ARCHITECTURE.md` | Organisation du code, flux de données. **Le "comment".** |
-| `docs/HOWTO_AJOUTER_UN_MONUMENT.md` | Procédure pas à pas pour un monument. |
-| `docs/HOWTO_AJOUTER_UN_VEHICULE.md` | Procédure pas à pas pour un véhicule. |
+| `docs/HOWTO_AJOUTER_UN_MONUMENT.md` | Procédure pas à pas pour ajouter / retirer / modéliser un lieu. |
+| `docs/HOWTO_AJOUTER_UN_VEHICULE.md` | Procédure pas à pas pour un véhicule (terrestre, bateau, volant). |
+| `docs/GUIDE_MODELISATION.md` | **Comment construire un modèle 3D** : échelle, pivots, recettes (bâtiment, cascade, animal…). |
 | `docs/ROADMAP.md` | La liste ordonnée des prochaines tâches, avec leurs prompts. |
+| `docs/DEPLOIEMENT.md` | GitHub, AI Studio, mise en ligne. |
 
 ---
 
@@ -34,13 +36,14 @@ Documents de référence :
 2. **Ne réécris jamais un fichier entier** pour changer quelques lignes. Modifie le strict nécessaire.
 3. **Ne supprime jamais de code que tu ne comprends pas.** Les commentaires en français
    expliquent le pourquoi : lis-les.
-4. **Données ≠ code.** Ajouter un monument, un véhicule, une ville, une route, une montagne,
-   une réplique du mouton = **ajouter une entrée de données** dans `src/content/` ou
-   `src/world/data/`. Ne touche pas au moteur pour ça.
+4. **Données ≠ code.** Ajouter un monument, un véhicule, une ville, une route, une rivière, une
+   montagne, déplacer une frontière de zone, une réplique du mouton = **modifier des données**
+   dans `src/content/` ou `src/world/data/`. Ne touche pas au moteur pour ça.
 5. **Tous les réglages numériques sont dans `src/config/gameConfig.ts`.** Pas de nombre magique ailleurs.
 6. **Toutes les couleurs viennent de `src/models/palette.ts`** (par leur nom : `'stone'`, `'grass'`…).
 7. **Tous les modèles 3D sont construits avec `ModelBuilder`** (`src/models/ModelBuilder.ts`)
-   et les briques de `src/models/landmarkKit.ts`. Jamais de `new THREE.Mesh(new THREE.BoxGeometry…)`
+   et les briques de `src/models/landmarkKit.ts` / `src/models/sceneryKit.ts`
+   (voir `docs/GUIDE_MODELISATION.md`), et **vérifiés dans l'Atelier 3D** (`?atelier`). Jamais de `new THREE.Mesh(new THREE.BoxGeometry…)`
    à la main dans le contenu. Jamais de nouveau matériau par objet (voir `materials.ts`).
 8. **Le jeu ne lit jamais une touche directement** : il lit des ACTIONS (`src/input/bindings.ts`).
 9. **Le moteur ne touche jamais au DOM, l'UI ne touche jamais à three.js.**
@@ -62,17 +65,21 @@ Documents de référence :
 src/
   config/gameConfig.ts      ← TOUS les réglages (vitesses, caméra, distances, qualité…)
   content/                  ← CONTENU DU JEU (données) — c'est ici que tu travailles le plus
-    landmarks/              ← 1 fichier par monument + index.ts (registre)
+    landmarks/              ← 1 fichier par lieu + index.ts (registre, rangé par zone)
     vehicles/               ← 1 fichier par véhicule + index.ts (registre)
     customization.ts        ← options de personnalisation
     sheepLines.ts           ← répliques du mouton
   world/
     data/                   ← géographie : relief.ts (montagnes, falaises, biomes),
-                              towns.ts (villes), roads.ts (routes), irelandGeo.json (côtes, NE PAS ÉDITER)
+                              towns.ts (villes), roads.ts (routes), rivers.ts (rivières ajoutées),
+                              zones.ts (4 zones, gares), irelandGeo.json (côtes, NE PAS ÉDITER)
     *.ts                    ← moteur du monde (relief, chunks, eau, ciel, végétation, villes, routes)
-  models/                   ← ModelBuilder, palette, matériaux, kit de monuments, personnage, mouton
+  models/                   ← ModelBuilder, palette, matériaux, landmarkKit (bâtiments),
+                              sceneryKit (cascades, lacs, bateaux…), gare, personnage, mouton
   entities/                 ← Player, Sheep, CameraRig, movement (déplacements)
-  systems/                  ← LandmarkManager, PhotoSystem, Progression, Audio, Hud
+  systems/                  ← LandmarkManager, PhotoSystem, Progression (pièces, achats, zones),
+                              Zones (mur invisible), Stations (gares), ZoneGates, Audio, Hud
+  atelier/                  ← Atelier 3D (outil de création, page ?atelier)
   core/                     ← Game (boucle), events, save, photoStore, math
   input/                    ← bindings (touches ↔ actions), Input
   ui/                       ← React : HUD, écrans (screens/), commandes tactiles
@@ -106,9 +113,12 @@ src/
 4. Tu as testé **précisément** ce que tu as changé. Outils de test dans la console :
    - `__eirelens.debugGoto('rock_of_cashel')` → téléporte près d'un monument
    - `__eirelens.debugGoto('rock_of_cashel', 80)` → idem, à 80 u
-   - `__eirelens.debugUnlockAll()` → débloque tous les véhicules
+   - `__eirelens.debugUnlockAll()` → ouvre toutes les zones et offre tous les véhicules (non sauvegardé)
+   - `__eirelens.debugMoney(1000)` → ajoute des pièces
+   - `__eirelens.debugWhere()` → zone et gare la plus proche du joueur
    - `__eirelens.debugHour(19.5)` → change l'heure (coucher de soleil)
    - `__eirelens.player.pos` → position du joueur
+   - **Atelier 3D** : ajoute `?atelier=landmark:<id>` (ou `vehicle:<id>`) à l'URL pour voir un modèle seul
 5. Dans ta réponse, liste : fichiers modifiés, ce qui a été testé, ce qui reste à vérifier par l'humain.
 
 ---

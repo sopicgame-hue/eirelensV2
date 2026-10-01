@@ -12,6 +12,7 @@ export const rockOfCashel: LandmarkDef = {
   county: 'Tipperary',
   province: 'Munster',
   category: 'patrimoine',
+  tier: 'principal',
   lat: 52.52,
   lon: -7.8906,
   rotationDeg: 10,

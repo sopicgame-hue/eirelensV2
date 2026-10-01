@@ -10,7 +10,7 @@ export const bicycle: VehicleDef = {
   name: 'Vélo à panier',
   description: 'Un vieux vélo vert avec un grand panier. Paddy y tient tout juste.',
   icon: '🚲',
-  unlockAt: 2,
+  price: 150,
   medium: 'land',
   maxSpeed: 15,
   acceleration: 10,

@@ -11,6 +11,7 @@ export const hillOfTara: LandmarkDef = {
   county: 'Meath',
   province: 'Leinster',
   category: 'patrimoine',
+  tier: 'secondaire',
   lat: 53.5797,
   lon: -6.6119,
   description: "L'ancien siège des Grands Rois d'Irlande.",

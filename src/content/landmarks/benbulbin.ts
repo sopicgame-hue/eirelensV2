@@ -11,6 +11,7 @@ export const benbulbin: LandmarkDef = {
   county: 'Sligo',
   province: 'Connacht',
   category: 'nature',
+  tier: 'secondaire',
   lat: 54.367,
   lon: -8.4725,
   description: "Un plateau calcaire à la silhouette de table, sculpté par les glaciers.",

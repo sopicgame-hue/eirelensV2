@@ -19,7 +19,13 @@ export type SheepTrigger =
   | 'discover'
   | 'night'
   | 'teleport'
-  | 'unlock';
+  | 'unlock'
+  | 'horse'
+  | 'takeoff'
+  | 'zoneLocked'
+  | 'zoneOpen'
+  | 'train'
+  | 'money';
 
 export const SHEEP_LINES: Record<SheepTrigger, string[]> = {
   idle: [
@@ -43,7 +49,13 @@ export const SHEEP_LINES: Record<SheepTrigger, string[]> = {
   discover: ['Oh ! On en a trouvé un nouveau !', 'Un de plus pour l’album !', 'Ça, c’est de l’Irlande !'],
   night: ['Il fait nuit. Les moutons normaux dorment, tu sais.', 'Je compte les humains pour m’endormir.'],
   teleport: ['Me revoilà ! Raccourci secret.', 'Tu m’as semé ? Raté.', 'J’ai pris un autre chemin.'],
-  unlock: ['Un nouveau moyen de transport ? Avec un siège pour moi j’espère.'],
+  unlock: ['Un nouveau moyen de transport ? Avec un siège pour moi j’espère.', 'Tu as acheté ça avec NOS pièces ? Bon. D’accord.'],
+  horse: ['Un cheval ? Je me sens remplacé.', 'Je voyage sur la croupe. Comme un roi. Un roi un peu secoué.', 'Il sent le foin. J’aime bien.'],
+  takeoff: ['BÊÊÊÊÊÊÊÊ !', 'Je ne regarde pas en bas. Je ne regarde pas en bas.', 'Les moutons volants, c’est pas une expression, ça ?', 'Le harnais est solide ? Dis-moi qu’il est solide.'],
+  zoneLocked: ['C’est fermé. Même pour un mouton.', 'Il nous faut d’abord finir l’album d’ici.', 'Zone verrouillée… Il reste des photos à prendre par ici.'],
+  zoneOpen: ['Une nouvelle région ! On prend le train ?', 'J’ai toujours rêvé de voir du pays. Enfin, d’autres prés.', 'Tchou-tchou ! Direction la gare !'],
+  train: ['Le train, c’est le seul véhicule où je ne fais rien. J’adore.', 'Tchou-tchou ! On est arrivés ?', 'Ça sent l’herbe nouvelle par ici.'],
+  money: ['Ça paie, la photo !', 'Des pièces ! On s’achète un champ ?', 'Je garde la caisse, si tu veux.'],
 };
 
 export function sheepLine(trigger: SheepTrigger, name: string) {

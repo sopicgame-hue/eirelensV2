@@ -5,7 +5,8 @@
  * États :
  *   follow    : suit le joueur (marche / court / se téléporte s'il est semé)
  *   ridden    : le joueur est sur son dos (position = celle du joueur)
- *   seated    : assis dans un véhicule (attaché au modèle du véhicule)
+ *   seated    : à bord d'un véhicule (attaché au modèle du véhicule), assis
+ *               ou suspendu sous le ULM (seatPose = 'hang')
  *   photobomb : court se placer dans le cadre de la photo et saute partout
  */
 import * as THREE from 'three';
@@ -40,6 +41,8 @@ export class Sheep {
   private bombTime = 0;
   private lastLine = 0;
   private rideTime = 0;
+  /** Pose à bord d'un véhicule : assis, ou suspendu (ULM). */
+  private seatPose: 'sit' | 'hang' = 'sit';
   /** Renseigné par Game à chaque frame (répliques nocturnes). */
   isNight = false;
 
@@ -83,8 +86,9 @@ export class Sheep {
   }
 
   // ------------------------------------------------------------ véhicules
-  sitIn(vehicleModel: THREE.Object3D, offset: [number, number, number], scale = 1) {
+  sitIn(vehicleModel: THREE.Object3D, offset: [number, number, number], scale = 1, pose: 'sit' | 'hang' = 'sit') {
     this.state = 'seated';
+    this.seatPose = pose;
     this.rig.root.parent?.remove(this.rig.root);
     vehicleModel.add(this.rig.root);
     this.rig.root.position.set(offset[0], offset[1] - 0.62 * scale, offset[2]);
@@ -178,7 +182,8 @@ export class Sheep {
       const step = Math.min(dist, this.speed * dt);
       const r = moveEntity(this.world, this.pos.x, this.pos.z, (dx / dist) * step, (dz / dist) * step, PARAMS);
       const moved = Math.hypot(r.x - this.pos.x, r.z - this.pos.z);
-      this.stuckTime = moved < step * 0.2 && dist > 2 ? this.stuckTime + dt : 0;
+      // Bloqué (ou contre le mur d'une zone fermée) : au bout de 2,5 s il "réapparaît" côté joueur
+      this.stuckTime = moved < step * 0.2 && (dist > 2 || r.zoneBlocked) ? this.stuckTime + dt : 0;
       this.pos.x = r.x;
       this.pos.z = r.z;
       this.graze = 0;
@@ -213,10 +218,20 @@ export class Sheep {
     r.legs[3].rotation.x = s * 0.8 * gallop;
     r.legs[1].rotation.x = -s * 0.8 * gallop;
     r.legs[2].rotation.x = -s * 0.8 * gallop;
-    if (this.state === 'seated') r.legs.forEach((l) => (l.rotation.x = -1.2));
+    if (this.state === 'seated' && this.seatPose === 'hang') {
+      // Suspendu : pattes qui pendouillent et gigotent dans le vide
+      r.legs.forEach((l, i) => {
+        l.rotation.x = Math.sin(this.time * 3.1 + i * 1.7) * 0.35;
+        l.rotation.z = (i % 2 ? -1 : 1) * 0.15;
+      });
+    } else {
+      r.legs.forEach((l) => (l.rotation.z = 0));
+      if (this.state === 'seated') r.legs.forEach((l) => (l.rotation.x = -1.2));
+    }
     r.body.position.y = 0.62 + Math.abs(Math.cos(this.phase)) * 0.08 * gallop + Math.sin(this.time * 2.2) * 0.01;
     const grazing = this.graze > 3 && Math.sin(this.time * 0.3) > 0.2;
-    r.head.rotation.x = damp(r.head.rotation.x, grazing ? 0.9 : 0, 4, dt);
+    const hanging = this.state === 'seated' && this.seatPose === 'hang';
+    r.head.rotation.x = damp(r.head.rotation.x, hanging ? 0.4 + Math.sin(this.time * 1.3) * 0.15 : grazing ? 0.9 : 0, 4, dt);
     r.tail.rotation.y = Math.sin(this.time * (speed > 1 ? 18 : 5)) * 0.4;
   }
 

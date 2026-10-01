@@ -8,7 +8,7 @@
  */
 import { useSyncExternalStore } from 'react';
 
-export type Screen = 'loading' | 'title' | 'play' | 'photo' | 'album' | 'map' | 'pause' | 'customize' | 'vehicles';
+export type Screen = 'loading' | 'title' | 'play' | 'photo' | 'album' | 'map' | 'pause' | 'customize' | 'vehicles' | 'train' | 'travel';
 
 export interface Toast {
   id: number;
@@ -27,16 +27,26 @@ export interface UiState {
     compass: { id: string; name: string; angle: number; distance: number; done: boolean }[];
     discovered: number;
     total: number;
-    /** Indication contextuelle ("A : caresser Paddy"…). */
+    /** Pièces du joueur. */
+    money: number;
+    /** Zone actuelle et avancement de ses lieux principaux (☆). */
+    zone: { name: string; color: string; principalsDone: number; principalsTotal: number };
+    /** Indication contextuelle : 'pet' | 'boat' | 'train' | ''. */
     hint: string;
+    /** Nom de la gare proche (si hint = 'train'). */
+    station: string;
   };
+  /** Panneau "Zone verrouillée" (affiché quand on bute contre une frontière fermée). */
+  zoneBanner: { title: string; text: string; until: number } | null;
+  /** Voyage en train en cours (écran 'travel'). */
+  travel: { from: string; to: string } | null;
   photo: {
     fov: number;
     /** Monument actuellement cadré, s'il est valide. */
     target: { name: string; quality: number } | null;
     flash: number;
   };
-  lastPhoto: { dataUrl: string; title: string; stars: number; isNew: boolean; withSheep: boolean } | null;
+  lastPhoto: { dataUrl: string; title: string; stars: number; isNew: boolean; withSheep: boolean; earned: number } | null;
   sheepBubble: { text: string; until: number } | null;
   toasts: Toast[];
   device: 'keyboard' | 'gamepad' | 'touch';
@@ -45,7 +55,9 @@ export interface UiState {
 const initial: UiState = {
   screen: 'loading',
   loading: { progress: 0, label: 'Préparation…' },
-  hud: { region: '', hour: 10, vehicleId: 'foot', compass: [], discovered: 0, total: 0, hint: '' },
+  hud: { region: '', hour: 10, vehicleId: 'foot', compass: [], discovered: 0, total: 0, money: 0, zone: { name: '', color: '#fff', principalsDone: 0, principalsTotal: 0 }, hint: '', station: '' },
+  zoneBanner: null,
+  travel: null,
   photo: { fov: 50, target: null, flash: 0 },
   lastPhoto: null,
   sheepBubble: null,

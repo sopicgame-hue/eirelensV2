@@ -18,6 +18,7 @@ export const templateLandmark: LandmarkDef = {
   county: 'Cork',
   province: 'Munster',
   category: 'patrimoine', // 'nature' | 'monument' | 'patrimoine' | 'ville' | 'phare'
+  tier: 'secondaire', // 'principal' (☆ obligatoire pour ouvrir la zone suivante) | 'secondaire' (◉) | 'bonus' (♥)
   lat: 51.9291, // Google Maps : clic droit sur le lieu → la 1re valeur est la latitude
   lon: -8.5709, // …la 2e est la longitude
   rotationDeg: 0, // oriente l'axe +Z local (façade principale) ; 0 = vers le sud

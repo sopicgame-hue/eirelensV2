@@ -1,7 +1,8 @@
 /**
- * Currach : la barque traditionnelle de la côte ouest (coque noire goudronnée).
- * Indispensable pour rejoindre les îles (Skellig Michael, Fastnet, Aran…).
- * Se met à l'eau depuis n'importe quel rivage.
+ * Le BATEAU du jeu : un currach, la barque traditionnelle de la côte ouest
+ * (coque noire goudronnée). Indispensable pour rejoindre les îles
+ * (Aran, Skellig Michael, Fastnet…). Se met à l'eau depuis n'importe quel rivage.
+ * (L'id reste 'currach' : ne jamais changer un id, il est dans les sauvegardes.)
  */
 import * as THREE from 'three';
 import { VehicleDef } from './types';
@@ -9,10 +10,10 @@ import { ModelBuilder } from '../../models/ModelBuilder';
 
 export const currach: VehicleDef = {
   id: 'currach',
-  name: 'Currach',
+  name: 'Bateau (currach)',
   description: 'La barque goudronnée des pêcheurs de l’Ouest. Direction les îles !',
   icon: '🛶',
-  unlockAt: 7,
+  price: 600,
   medium: 'water',
   maxSpeed: 20,
   acceleration: 7,

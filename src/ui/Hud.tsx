@@ -1,13 +1,14 @@
 /**
- * HUD en jeu : lieu + heure (haut gauche), boussole des monuments (haut centre),
- * compteur de monuments (haut droite), dialogue du mouton (bas), notifications,
- * rappel des commandes (bas droite).
+ * HUD en jeu : lieu + zone + heure (haut gauche), boussole des monuments (haut centre),
+ * pièces + compteur de lieux (haut droite), panneau "Zone verrouillée", dialogue du
+ * mouton (bas), notifications, rappel des commandes (bas droite).
  */
 import React, { useEffect, useState } from 'react';
 import { useUi } from './uiStore';
 import { Key, formatHour } from './components';
 import { getGame } from './gameRef';
 import { getVehicle } from '../content/vehicles';
+import { ECONOMY } from '../config/gameConfig';
 
 export function Hud() {
   const hud = useUi((s) => s.hud);
@@ -19,25 +20,34 @@ export function Hud() {
       <div className="flex items-start justify-between gap-3">
         <div className="rounded-xl border-2 border-white/70 bg-black/35 px-3 py-1.5 backdrop-blur-sm">
           <div className="text-base font-extrabold leading-tight sm:text-lg">{hud.region}</div>
+          <div className="flex items-center gap-1.5 text-xs font-bold opacity-95">
+            <span className="inline-block h-2.5 w-2.5 rounded-full border border-white" style={{ background: hud.zone.color }} />
+            {hud.zone.name} · ☆ {hud.zone.principalsDone}/{hud.zone.principalsTotal}
+          </div>
           <div className="text-xs opacity-90 sm:text-sm">
             {timeIcon(hud.hour)} {formatHour(hud.hour)} · {vehicle}
           </div>
         </div>
         <Compass />
         <div className="rounded-xl border-2 border-white/70 bg-black/35 px-3 py-1.5 text-right backdrop-blur-sm">
-          <div className="text-xs opacity-90">Monuments</div>
           <div className="text-lg font-extrabold leading-tight">
+            {ECONOMY.ICON} {hud.money}
+          </div>
+          <div className="text-sm font-bold leading-tight opacity-90">
             📷 {hud.discovered} / {hud.total}
           </div>
         </div>
       </div>
 
+      <ZoneBanner />
+
       <Toasts />
       <SheepDialog name={sheepName} />
 
       <div className="absolute bottom-3 right-3 hidden flex-col items-end gap-1 rounded-xl bg-black/30 px-3 py-2 text-white/95 backdrop-blur-sm sm:flex" style={{ display: device === 'touch' ? 'none' : undefined }}>
+        {hud.hint === 'train' && <Key action="confirm" label={`${hud.station} : prendre le train`} />}
         {hud.hint === 'pet' && <Key action="confirm" label={`Caresser ${sheepName}`} />}
-        {hud.hint === 'boat' && <Key action="vehicle" label="Mettre le currach à l’eau" />}
+        {hud.hint === 'boat' && <Key action="vehicle" label="Mettre le bateau à l’eau" />}
         <Key action="photo" label="Appareil photo" />
         <Key action="run" label="Galoper (maintenir)" />
         <Key action="vehicle" label="Véhicules" />
@@ -73,6 +83,28 @@ function Compass() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Panneau "Zone verrouillée", façon panneau routier jaune, quand on bute contre une frontière fermée. */
+function ZoneBanner() {
+  const banner = useUi((s) => s.zoneBanner);
+  const [, force] = useState(0);
+  useEffect(() => {
+    if (!banner) return;
+    const t = setTimeout(() => force((n) => n + 1), Math.max(0, banner.until - performance.now()) + 20);
+    return () => clearTimeout(t);
+  }, [banner]);
+  if (!banner || performance.now() > banner.until) return null;
+  return (
+    <div className="absolute left-1/2 top-24 w-[min(90vw,520px)] origin-top animate-[sway_3s_ease-in-out_infinite]" style={{ transform: 'translateX(-50%)' }}>
+      <div className="mx-auto h-3 w-24 border-x-4 border-[#1d1d1f]" />
+      <div className="rounded-xl border-[5px] border-[#1d1d1f] bg-[#f5c518] px-4 py-2.5 text-center text-[#1d1d1f] shadow-[0_6px_0_rgba(0,0,0,0.35)]">
+        <div className="text-lg font-black tracking-wide">🔒 ZONE VERROUILLÉE</div>
+        <div className="text-base font-extrabold leading-tight">{banner.title}</div>
+        <div className="mt-1 text-sm font-bold leading-snug">{banner.text}</div>
+      </div>
     </div>
   );
 }

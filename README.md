@@ -2,8 +2,9 @@
 
 Balade contemplative en **3D low-poly** dans une **Irlande miniature** fidèle à la vraie
 géographie, avec un **mouton de compagnie** un peu râleur. Le but : photographier les lieux
-emblématiques de l'île (Falaises de Moher, Chaussée des Géants, Rocher de Cashel, Skellig Michael…),
-débloquer des moyens de transport et remplir l'album.
+emblématiques de l'île (Falaises de Moher, Chaussée des Géants, Fungie, Titanic Belfast, Glendalough…),
+gagner des pièces pour acheter vélo, cheval, bateau et ULM, et ouvrir une à une les 4 zones
+(Sud → Irlande du Nord → Ouest → Dublin), reliées par le train.
 
 Jouable au clavier, à la **manette** et au **tactile**, dans le navigateur, en plein écran sur **iPad**.
 
@@ -24,6 +25,7 @@ npm run build    # version de production dans dist/
 | Galoper sur le mouton | maintenir B | maintenir Maj |
 | Appareil photo / déclencher | Y / A | C / Espace |
 | Zoom | RT / LT | E / A, molette |
+| Caresser le mouton · Prendre le train (près d'une gare) | A | Espace |
 | Véhicules · Carte · Album · Pause | X · Select · ↓ · Start | V · M · B · Échap |
 
 ## Documentation
@@ -34,6 +36,7 @@ npm run build    # version de production dans dist/
 | Comprendre le jeu | [`docs/GDD.md`](docs/GDD.md) |
 | Comprendre le code | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | Ajouter un monument / un véhicule | [`docs/HOWTO_AJOUTER_UN_MONUMENT.md`](docs/HOWTO_AJOUTER_UN_MONUMENT.md) · [`docs/HOWTO_AJOUTER_UN_VEHICULE.md`](docs/HOWTO_AJOUTER_UN_VEHICULE.md) |
+| Modéliser en 3D (recettes, échelle, animation) + **Atelier 3D** (`?atelier`) | [`docs/GUIDE_MODELISATION.md`](docs/GUIDE_MODELISATION.md) |
 | Savoir quoi faire ensuite (prompts prêts à coller) | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | Mettre en ligne (GitHub, AI Studio, iPad) | [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md) |
 

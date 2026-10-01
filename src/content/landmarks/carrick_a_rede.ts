@@ -11,6 +11,7 @@ export const carrickARede: LandmarkDef = {
   county: 'Antrim',
   province: 'Ulster',
   category: 'patrimoine',
+  tier: 'secondaire',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 55.2358,
   lon: -6.3371,

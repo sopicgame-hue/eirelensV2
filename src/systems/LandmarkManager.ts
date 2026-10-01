@@ -17,11 +17,14 @@ import { makeRng, hash2 } from '../core/math';
 import { sharedMaterials } from '../models/materials';
 
 export interface PlacedLandmark {
+  /** (non readonly : une animation en erreur est désactivée en remplaçant def) */
   def: LandmarkDef;
   x: number;
   z: number;
   rot: number;
   object: THREE.Object3D | null;
+  /** Zones dégagées en coordonnées monde (centre + clearAreas). */
+  clear: { x: number; z: number; r: number }[];
 }
 
 /** Local (dx, dz) → monde, avec la même convention que object.rotation.y. */
@@ -38,7 +41,7 @@ export function landmarkStamps(defs: LandmarkDef[]): TerrainStamp[] {
     const rot = ((d.rotationDeg ?? 0) * Math.PI) / 180;
     for (const s of d.terrain ?? []) {
       const w = localToWorld(p.x, p.z, rot, s.dx ?? 0, s.dz ?? 0);
-      out.push({ kind: s.kind, x: w.x, z: w.z, radius: s.radius, height: s.height, blend: s.blend });
+      out.push({ kind: s.kind, x: w.x, z: w.z, radius: s.radius, height: s.height, blend: s.blend, ...(s.offset !== undefined ? { refX: p.x, refZ: p.z, offset: s.offset } : {}) });
     }
   }
   return out;
@@ -59,7 +62,13 @@ export class LandmarkManager {
       if (ids.has(def.id)) console.error(`[landmarks] id en double : ${def.id}`);
       ids.add(def.id);
       const p = lonLatToWorld(def.lon, def.lat);
-      return { def, x: p.x, z: p.z, rot: ((def.rotationDeg ?? 0) * Math.PI) / 180, object: null };
+      const rot = ((def.rotationDeg ?? 0) * Math.PI) / 180;
+      const clear = [{ x: p.x, z: p.z, r: def.clearRadius }];
+      for (const a of def.clearAreas ?? []) {
+        const w = localToWorld(p.x, p.z, rot, a.dx, a.dz);
+        clear.push({ x: w.x, z: w.z, r: a.radius });
+      }
+      return { def, x: p.x, z: p.z, rot, object: null, clear };
     });
   }
 
@@ -69,10 +78,8 @@ export class LandmarkManager {
 
   /** Vrai si (x, z) est dans la zone dégagée d'un monument. */
   isReserved(x: number, z: number) {
-    for (const p of this.placed) {
-      const r = p.def.clearRadius;
-      if (Math.abs(x - p.x) < r && Math.abs(z - p.z) < r && Math.hypot(x - p.x, z - p.z) < r) return true;
-    }
+    for (const p of this.placed)
+      for (const c of p.clear) if (Math.abs(x - c.x) < c.r && Math.abs(z - c.z) < c.r && Math.hypot(x - c.x, z - c.z) < c.r) return true;
     return false;
   }
 
@@ -95,6 +102,19 @@ export class LandmarkManager {
         this.spawn(p);
         spawned++;
       } else if (p.object && d > STREAMING.LANDMARK_DESPAWN_DISTANCE) this.despawn(p);
+    }
+  }
+
+  /** Anime les monuments chargés qui ont un `animate` (dauphin, cascade…). */
+  animate(dt: number, time: number) {
+    for (const p of this.placed) {
+      if (!p.object || !p.def.animate || p.def.status !== 'done') continue;
+      try {
+        p.def.animate(p.object, dt, time);
+      } catch (e) {
+        console.error(`[landmarks] erreur d'animation de "${p.def.id}" (animation désactivée)`, e);
+        p.def = { ...p.def, animate: undefined };
+      }
     }
   }
 

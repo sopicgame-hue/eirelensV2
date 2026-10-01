@@ -11,6 +11,7 @@ export const fanadHead: LandmarkDef = {
   county: 'Donegal',
   province: 'Ulster',
   category: 'phare',
+  tier: 'bonus',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 55.265,
   lon: -7.6423,

@@ -11,6 +11,7 @@ export const dunAonghasa: LandmarkDef = {
   county: 'Galway',
   province: 'Connacht',
   category: 'patrimoine',
+  tier: 'secondaire',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 53.1271,
   lon: -9.7676,

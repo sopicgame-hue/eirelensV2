@@ -36,6 +36,10 @@ export interface TerrainStamp {
   height?: number;
   /** Largeur de la zone de raccord autour du rayon (unités). Défaut 12. */
   blend?: number;
+  /** Hauteur relative : sol naturel en (refX, refZ) + offset (si `height` absent). */
+  refX?: number;
+  refZ?: number;
+  offset?: number;
 }
 
 interface MassifW {
@@ -103,7 +107,9 @@ export class Heightfield {
       this.towns.add({ x: p.x, z: p.z, r, h }, p.x, p.z, r * 2);
     }
     for (const s of stamps) {
-      const st = { ...s, target: s.height ?? Math.max(1.2, this.baseNoRoad(s.x, s.z, false)) };
+      const rel = s.offset !== undefined && s.refX !== undefined && s.refZ !== undefined;
+      const auto = rel ? this.baseNoRoad(s.refX!, s.refZ!, false) + s.offset! : this.baseNoRoad(s.x, s.z, false);
+      const st = { ...s, target: s.height ?? Math.max(rel ? 0.4 : 1.2, auto) };
       this.stamps.add(st, s.x, s.z, s.radius + (s.blend ?? 12));
     }
     this.computeRoadProfiles();
@@ -185,7 +191,8 @@ export class Heightfield {
       const rd = g.roadDist[k];
       const half = TERRAIN.ROAD_WIDTH * 0.5 + 1;
       const blend = 14;
-      if (rd < half + blend) {
+      // Hors de la chaussée, l'eau reste de l'eau (sinon une route longeant une rivière la comblerait)
+      if (rd < half + blend && !(g.coast[k] <= 0 && rd > half)) {
         const rh = g.roadSamples[n].h;
         h = lerp(rh, h, smoothstep(half, half + blend, rd));
       }
@@ -195,11 +202,14 @@ export class Heightfield {
 
   /** Relief naturel + villes + tampons (sans les routes). */
   private baseNoRoad(x: number, z: number, withStamps: boolean, coastDist?: number) {
-    let h = this.natural(x, z, coastDist);
-    for (const t of this.towns.query(x, z)) {
-      const d = Math.hypot(x - t.x, z - t.z);
-      if (d < t.r * 2) h = lerp(t.h, h, smoothstep(t.r * 0.8, t.r * 2, d));
-    }
+    const cd = coastDist ?? this.grid.sampleCoast(x, z);
+    let h = this.natural(x, z, cd);
+    // Villes aplanies… mais jamais l'eau : les rivières et ports traversant une ville restent visibles
+    if (cd > 0)
+      for (const t of this.towns.query(x, z)) {
+        const d = Math.hypot(x - t.x, z - t.z);
+        if (d < t.r * 2) h = lerp(t.h, h, smoothstep(t.r * 0.8, t.r * 2, d));
+      }
     if (withStamps) h = this.applyStamps(x, z, h);
     return h;
   }

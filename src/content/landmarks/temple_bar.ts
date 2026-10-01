@@ -11,6 +11,7 @@ export const templeBar: LandmarkDef = {
   county: 'Dublin',
   province: 'Leinster',
   category: 'ville',
+  tier: 'secondaire',
   lat: 53.3455,
   lon: -6.2643,
   description: "Le quartier animé de Dublin, ses pubs colorés et sa musique live.",

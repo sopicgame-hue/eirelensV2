@@ -12,6 +12,7 @@ export const newgrange: LandmarkDef = {
   county: 'Meath',
   province: 'Leinster',
   category: 'patrimoine',
+  tier: 'principal',
   lat: 53.6947,
   lon: -6.4755,
   rotationDeg: 45,

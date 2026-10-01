@@ -1,6 +1,7 @@
 /**
  * Format d'un VÉHICULE. Un véhicule = un fichier dans content/vehicles/ + une
- * ligne dans index.ts. Voir docs/HOWTO_AJOUTER_UN_VEHICULE.md.
+ * ligne dans index.ts. Voir docs/HOWTO_AJOUTER_UN_VEHICULE.md et
+ * docs/GUIDE_MODELISATION.md (modèle 3D).
  *
  * Conduite "arcade" commune à tous les véhicules : le stick indique la
  * direction voulue (relative à la caméra), le véhicule tourne vers elle à
@@ -15,26 +16,46 @@ export interface VehicleDef {
   description: string;
   /** Icône (emoji) affichée dans les menus. */
   icon: string;
-  /** Nombre de monuments photographiés requis pour le débloquer. */
-  unlockAt: number;
-  /** 'land' : roule sur la terre ; 'water' : navigue (ne peut pas toucher terre). */
-  medium: 'land' | 'water';
+  /** Prix d'achat (en pièces, voir ECONOMY dans gameConfig.ts). 0 = offert dès le départ. */
+  price: number;
+  /**
+   * 'land'  : roule / marche sur la terre ;
+   * 'water' : navigue (ne peut pas toucher terre) ;
+   * 'air'   : roule au sol, décolle dès `flight.takeoffSpeed`, vole au-dessus du relief.
+   */
+  medium: 'land' | 'water' | 'air';
   maxSpeed: number;
   acceleration: number;
   /** Vitesse de rotation max (rad/s). */
   turnRate: number;
-  /** Pente max franchissable (land) — 1 = 45°. */
+  /** Pente max franchissable au sol — 1 = 45°. */
   maxSlope: number;
   /** Rayon de collision. */
   radius: number;
-  /** Position/pose du joueur sur le véhicule (coordonnées locales du modèle). */
-  rider: { offset: [number, number, number]; pose: 'sit' | 'bike' | 'hidden' };
-  /** Position du mouton à bord (null = le mouton court à côté). */
-  sheepSeat: { offset: [number, number, number]; scale?: number } | null;
+  /**
+   * Position/pose du joueur (coordonnées locales du modèle).
+   * 'sit' : assis jambes devant ; 'ride' : à califourchon (cheval) ;
+   * 'bike' : pédale ; 'hidden' : invisible (cabine fermée).
+   */
+  rider: { offset: [number, number, number]; pose: 'sit' | 'bike' | 'ride' | 'hidden' };
+  /**
+   * Place du mouton (null = le mouton court à côté).
+   * pose 'sit' : assis ; 'hang' : suspendu dans un harnais, pattes dans le vide (ULM).
+   */
+  sheepSeat: { offset: [number, number, number]; scale?: number; pose?: 'sit' | 'hang' } | null;
+  /** Réglages de vol (obligatoire si medium = 'air'). */
+  flight?: {
+    /** Hauteur de croisière au-dessus du relief (unités). */
+    cruiseHeight: number;
+    /** Vitesse à partir de laquelle on décolle (u/s). */
+    takeoffSpeed: number;
+    /** Vitesse de montée / descente (u/s). */
+    climbRate: number;
+  };
   /** Distance de caméra conseillée. */
   cameraDistance: number;
   /** Construit le modèle 3D (avant vers +Z, origine au sol). */
   build(): THREE.Object3D;
-  /** Animation optionnelle (roues, pédales…). speed en u/s. */
+  /** Animation optionnelle (roues, pattes, hélice…). speed en u/s. */
   animate?(model: THREE.Object3D, speed: number, dt: number, time: number): void;
 }

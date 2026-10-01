@@ -135,6 +135,37 @@ export const STREAMING = {
   LANDMARK_DESPAWN_DISTANCE: 800,
 };
 
+export const ECONOMY = {
+  /** Nom et icône de la monnaie du jeu. */
+  CURRENCY: 'pièces',
+  ICON: '🪙',
+  /** Récompense d'une photo 3 étoiles selon l'importance du lieu. */
+  TIER_REWARD: { principal: 120, secondaire: 80, bonus: 60 },
+  /** Part de la récompense selon le nombre d'étoiles (index = étoiles). Une meilleure photo paie la différence. */
+  STAR_FACTOR: [0, 0.5, 0.75, 1],
+  /** Pièces au début d'une nouvelle partie. */
+  START_MONEY: 0,
+};
+
+export const STATIONS = {
+  /** Distance (u) à la gare pour pouvoir prendre le train. */
+  INTERACT_DISTANCE: 9,
+  /** Rayon (u) autour d'une gare sans maisons ni arbres générés. */
+  CLEAR_RADIUS: 20,
+  /** Durée (ms) du fondu au noir pendant le voyage en train. */
+  TRAVEL_MS: 2600,
+};
+
+export const ZONE_UI = {
+  /** Durée d'affichage (s) du panneau "Zone verrouillée". */
+  BANNER_SECONDS: 4,
+};
+
+export const DEV = {
+  /** Affiche le bouton "Atelier 3D" sur l'écran titre (outil de création). Mettre false pour une version publique. */
+  ATELIER_BUTTON: true,
+};
+
 export const SAVE = {
   KEY: 'eirelens.save.v1',
   AUTOSAVE_SECONDS: 10,

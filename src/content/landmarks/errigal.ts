@@ -11,6 +11,7 @@ export const errigal: LandmarkDef = {
   county: 'Donegal',
   province: 'Ulster',
   category: 'nature',
+  tier: 'bonus',
   lat: 55.0339,
   lon: -8.1131,
   description: "Un pic de quartzite conique, le plus haut du Donegal (751 m).",

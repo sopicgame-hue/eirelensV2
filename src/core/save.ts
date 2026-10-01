@@ -7,9 +7,9 @@
  *   2. NE change PAS SAVE.KEY : loadSave() complète automatiquement les champs
  *      manquants des anciennes sauvegardes avec les valeurs par défaut.
  */
-import { SAVE, TIME } from '../config/gameConfig';
+import { SAVE, TIME, ECONOMY } from '../config/gameConfig';
 import { Customization, DEFAULT_CUSTOMIZATION } from '../content/customization';
-import { lonLatToWorld } from '../world/geo';
+import { ZONES, ZoneId } from '../world/data/zones';
 
 export interface LandmarkRecord {
   stars: number;
@@ -27,6 +27,12 @@ export interface SaveData {
   sheepName: string;
   /** Meilleure photo par monument. */
   landmarks: Record<string, LandmarkRecord>;
+  /** Pièces (gagnées en photographiant, dépensées en véhicules). */
+  money: number;
+  /** Véhicules achetés (ids). */
+  ownedVehicles: string[];
+  /** Zones ouvertes (ids). Une zone ouverte le reste pour toujours. */
+  zones: ZoneId[];
   stats: { photos: number; sheepPhotos: number; distance: number };
   settings: {
     quality: 'high' | 'low';
@@ -36,19 +42,23 @@ export interface SaveData {
   };
 }
 
-/** Point de départ : Doolin (Clare), à deux pas des Falaises de Moher. */
-const START = lonLatToWorld(-9.372, 53.012);
+/** Première zone (le Sud) : le joueur démarre devant sa gare (Killarney). */
+const FIRST_ZONE = [...ZONES].sort((a, b) => a.order - b.order)[0];
 
 export function defaultSave(): SaveData {
   return {
     version: 1,
     createdAt: Date.now(),
-    player: { x: START.x, z: START.z, rotY: Math.PI },
+    // NaN = "pas encore placé" : Game le pose devant la gare de la première zone
+    player: { x: NaN, z: NaN, rotY: 0 },
     vehicle: 'foot',
     timeOfDay: TIME.START_HOUR,
     customization: { ...DEFAULT_CUSTOMIZATION },
     sheepName: 'Paddy',
     landmarks: {},
+    money: ECONOMY.START_MONEY,
+    ownedVehicles: [],
+    zones: [FIRST_ZONE.id],
     stats: { photos: 0, sheepPhotos: 0, distance: 0 },
     settings: { quality: 'high', invertY: false, sfxVolume: 0.8, musicVolume: 0.5 },
   };
@@ -76,6 +86,10 @@ export function loadSave(): SaveData {
       stats: { ...def.stats, ...data.stats },
       settings: { ...def.settings, ...data.settings },
       landmarks: { ...data.landmarks },
+      // Sauvegarde d'avant l'économie : NaN = "à recalculer" (Progression.migrateLegacy)
+      money: typeof data.money === 'number' ? data.money : NaN,
+      ownedVehicles: Array.isArray(data.ownedVehicles) ? data.ownedVehicles : def.ownedVehicles,
+      zones: Array.isArray(data.zones) && data.zones.length ? data.zones : def.zones,
     };
   } catch (e) {
     console.warn('[save] sauvegarde illisible, nouvelle partie', e);

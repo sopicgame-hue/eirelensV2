@@ -11,6 +11,7 @@ export const bunrattyCastle: LandmarkDef = {
   county: 'Clare',
   province: 'Munster',
   category: 'patrimoine',
+  tier: 'secondaire',
   // Coordonnées réelles légèrement ajustées pour tomber sur le trait de côte simplifié du jeu.
   lat: 52.693,
   lon: -8.8114,

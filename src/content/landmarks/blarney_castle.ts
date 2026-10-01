@@ -11,6 +11,7 @@ export const blarneyCastle: LandmarkDef = {
   county: 'Cork',
   province: 'Munster',
   category: 'patrimoine',
+  tier: 'secondaire',
   lat: 51.9291,
   lon: -8.5709,
   description: "Un donjon du XVe siècle célèbre pour sa pierre magique.",
