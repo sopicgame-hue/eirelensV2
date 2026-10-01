@@ -11,8 +11,9 @@
 > 5. Coche les cases au fur et à mesure.
 
 **État au 1er octobre 2026** : 4 zones + trains, économie (pièces), 4 véhicules (vélo, cheval,
-bateau, ULM), 49 lieux dont **les 24 de la liste de départ, tous modélisés**, atelier 3D.
-Restent 20 lieux "proposition" en cairn provisoire (Phase 1).
+bateau, ULM), 52 lieux dont **les 24 de la liste de départ et 4 monuments de ville (Ha'penny
+Bridge, hôtel de ville de Belfast, St Fin Barre's, Tour de Reginald), tous modélisés**, églises
+et pubs dans les villes, atelier 3D. Restent 19 lieux "proposition" en cairn provisoire (Phase 1).
 
 ---
 
@@ -47,7 +48,7 @@ garde le commentaire d'ajustement côtier.
 
 ---
 
-## Phase 1 — Contenu : modéliser les 20 lieux "proposition" encore provisoires
+## Phase 1 — Contenu : modéliser les 19 lieux "proposition" encore provisoires
 
 Chaque lieu provisoire (cairn) a déjà son fichier, ses coordonnées, son importance, sa
 description et son anecdote. Il faut seulement écrire son modèle 3D. **Un lieu par prompt.**
@@ -133,11 +134,6 @@ de haut, lisibles depuis la caméra). Muret de pierres sèches.
 **[ ] errigal** — Montagne conique de quartzite (le relief existe). Au sommet : cairn + 2 petits
 sommets jumeaux (rochers `limestone` clairs), éboulis de pierres claires sur les flancs (InstancedMesh
 de 200 rochers `limestone`). photo : radius 40, maxDistance 650, bestHours [19, 21].
-
-**[ ] temple_bar** — Rue pavée (`stoneDark`) bordée de 10 façades de pubs de 2-3 étages
-alignées des deux côtés, couleurs vives variées ; le pub "The Temple Bar" ROUGE (`facadeA`) au
-coin, avec enseigne (boîte `gold`) et horloge. Lanternes. Terrain `flatten` r≈25.
-⚠ En ville : clearRadius ≈ 30.
 
 **[ ] dunguaire_castle** — Tour-maison (height 15) sur un rocher au bord de la baie (mer côté
 +Z), entourée d'un mur d'enceinte polygonal bas (`drystoneWall`), petite porte.
@@ -272,13 +268,16 @@ les 20 plus grandes). Texte via CanvasTexture partagée par panneau (max 60 pann
 chargés). Nouveau fichier src/world/Signposts.ts, chargé par chunk comme Scatter.
 ```
 
-### [ ] T2.10 — Pubs de village et musique trad
+### [ ] T2.10 — Musique trad près des pubs
 
 ```
-TÂCHE : dans chaque ville de taille ≥ 1, transformer une maison en pub (façade sombre,
-enseigne dorée avec le nom "<Ville> Inn"). Quand le joueur est à < 25 u d'un pub, la
-musique générative (systems/Audio.ts) passe en mode "trad" : tempo plus rapide, gamme
-dorienne, un second instrument (bourdon). Ne modifie que Towns.ts et Audio.ts.
+CONTEXTE : les pubs existent déjà (Towns.ts : 1 à 3 par ville, modèle dans
+models/townBuildings.ts), mais leurs positions ne sont pas conservées : stocke-les dans
+Towns.ts (tableau pubPositions) au moment du placement.
+TÂCHE : quand le joueur est à < 25 u d'un pub, la musique générative (systems/Audio.ts)
+passe en mode "trad" : tempo plus rapide, gamme dorienne, un second instrument (bourdon),
+avec un fondu de 2 s. Expose depuis Towns.ts une méthode nearestPub(x, z) → distance
+(sans allocation). Ne modifie que Towns.ts et Audio.ts.
 ```
 
 ### [ ] T2.11 — Télécharger / partager une photo
@@ -346,7 +345,7 @@ des véhicules (prompt : « change ECONOMY.TIER_REWARD en … et le prix du chev
 
 ## Idées pour plus tard (non prioritaires)
 
-Saisons (couleurs du terrain), ferry régulier vers les îles d'Aran, villages plus détaillés
-(églises, pubs), Finn McCool caché à la Chaussée des Géants, mode "carte postale" (texte
+Saisons (couleurs du terrain), ferry régulier vers les îles d'Aran, enseignes de pubs nommées
+("<Ville> Inn"), la Suir à Waterford (quai de la Tour de Reginald), Finn McCool caché à la Chaussée des Géants, mode "carte postale" (texte
 manuscrit sur la photo), succès, sauvegarde cloud (nécessite un backend : hors périmètre AI
 Studio gratuit).

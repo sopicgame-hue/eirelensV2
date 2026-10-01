@@ -113,7 +113,8 @@ export const ZONES: ZoneDef[] = [
     name: 'L’Irlande du Nord',
     order: 2,
     color: '#56ccf2',
-    station: { name: 'Gare de Belfast', lat: 54.5948, lon: -5.9406 },
+    // Décalée à l'ouest du centre : l'hôtel de ville (Belfast City Hall) occupe le centre
+    station: { name: 'Gare de Belfast', lat: 54.5935, lon: -5.965 },
     polygon: [...NI_BORDER, [56.2, -4.5]],
   },
   {

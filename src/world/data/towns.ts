@@ -18,7 +18,9 @@ export interface Town {
 
 export const TOWNS: Town[] = [
   // Grandes villes
-  { name: 'Dublin', lat: 53.349, lon: -6.26, size: 3 },
+  // Centre placé au nord de la Liffey (O'Connell Street) : les routes partent d'ici, et une
+  // route "assèche" l'eau autour d'elle — au ras du fleuve, elles l'auraient comblé.
+  { name: 'Dublin', lat: 53.356, lon: -6.262, size: 3 },
   { name: 'Belfast', lat: 54.597, lon: -5.93, size: 3 },
   { name: 'Cork', lat: 51.898, lon: -8.471, size: 3 },
   // Villes

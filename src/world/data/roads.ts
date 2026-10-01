@@ -20,10 +20,11 @@ export interface Route {
 export const ROUTES: Route[] = [
   { name: 'M1 Dublin – Belfast', steps: ['Dublin', 'Drogheda', 'Dundalk', 'Newry', 'Lisburn', 'Belfast'] },
   { name: 'M4/M6 Dublin – Galway', steps: ['Dublin', { lat: 53.454, lon: -7.101 }, 'Mullingar', 'Athlone', 'Ballinasloe', 'Galway'] },
-  { name: 'M7 Dublin – Limerick', steps: ['Dublin', 'Naas', 'Portlaoise', 'Nenagh', 'Limerick'] },
+  // M7 et N11 : points intermédiaires pour franchir la Liffey loin du Ha'penny Bridge
+  { name: 'M7 Dublin – Limerick', steps: ['Dublin', { lat: 53.362, lon: -6.33 }, { lat: 53.335, lon: -6.36 }, 'Naas', 'Portlaoise', 'Nenagh', 'Limerick'] },
   { name: 'M8 Portlaoise – Cork', steps: ['Portlaoise', 'Cashel', 'Mitchelstown', 'Cork'] },
   { name: 'M9 Naas – Waterford', steps: ['Naas', 'Carlow', 'Kilkenny', 'Waterford'] },
-  { name: 'N11 Dublin – Wexford', steps: ['Dublin', 'Wicklow', 'Arklow', 'Wexford'] },
+  { name: 'N11 Dublin – Wexford', steps: ['Dublin', { lat: 53.353, lon: -6.225 }, { lat: 53.335, lon: -6.214 }, 'Wicklow', 'Arklow', 'Wexford'] },
   { name: 'N25 Cork – Wexford', steps: ['Cork', 'Youghal', 'Dungarvan', 'Waterford', 'New Ross', 'Wexford'] },
   { name: 'N21 Limerick – Tralee', steps: ['Limerick', { lat: 52.565, lon: -8.79 }, { lat: 52.385, lon: -9.3 }, 'Tralee'] },
   { name: 'N22 Cork – Tralee', steps: ['Cork', 'Macroom', 'Killarney', 'Tralee'] },

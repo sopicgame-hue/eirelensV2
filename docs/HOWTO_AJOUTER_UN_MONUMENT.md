@@ -59,6 +59,10 @@ se chevaucheraient. Décale l'un des deux et signale-le en commentaire (voir `wo
   (ex : `offset: -1.2` → lac 1,2 u plus bas que le belvédère, voir `connemara.ts`).
 - ⚠ **Près de l'eau, garde `radius + blend` plus petit que la distance à l'eau**, sinon le tampon
   comble la mer / la rivière (voir les commentaires de `titanic_belfast.ts`, `ross_castle.ts`).
+- ⚠ **En ville : les routes ne sont pas effacées par un monument.** Toutes les routes d'une ville
+  convergent vers son centre (`towns.ts`) : un monument posé au centre serait traversé par la
+  chaussée. Décale-le de 20 à 50 u hors des routes et note les vraies coordonnées en commentaire
+  (voir `belfast_city_hall.ts`, `st_fin_barres.ts`, `reginalds_tower.ts`).
 
 ## Étape 4 — Modèle 3D (`build(ctx)`)
 

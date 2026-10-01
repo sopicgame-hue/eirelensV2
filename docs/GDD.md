@@ -144,25 +144,30 @@ simple d'enrichir le jeu. Ton : court, sec, affectueux. Jamais méchant.
 | ULM | 1 200 | 30 u/s | Vole à ~32 u au-dessus du relief, photos aériennes, mouton suspendu dessous |
 
 Équilibre visé : le vélo s'achète après 2 photos ; le bateau avant l'Ouest (les îles d'Aran y sont
-un lieu principal) ; l'ULM pendant l'Ouest ou à Dublin. Total possible ≈ 4 000 pièces pour
+un lieu principal) ; l'ULM pendant l'Ouest ou à Dublin. Total possible ≈ 4 300 pièces pour
 2 400 de véhicules : pas besoin de tout photographier pour tout acheter.
 
 ## 9. Contenu : les lieux
 
-**49 lieux**. Ceux de la liste de départ (Yann) sont obligatoires ; les "propositions" peuvent
-être retirées (`docs/HOWTO_AJOUTER_UN_MONUMENT.md`, cas C).
+**52 lieux**. Ceux de la liste de départ (Yann) et les monuments de ville demandés sont
+obligatoires ; les "propositions" peuvent être retirées (`docs/HOWTO_AJOUTER_UN_MONUMENT.md`, cas C).
 
 | Zone | ☆ Principaux (obligatoires) | ◉ Secondaires | ♥ Bonus |
 |---|---|---|---|
-| **Le Sud** | Fungie (Dingle), Rocher de Cashel | Château du roi Jean (Limerick), Château de Ross, Château de Kilkenny · *propositions :* Blarney, Gap of Dunloe | Cascade de Torc · *propositions :* Skellig Michael, Fastnet, Mizen Head, Carrauntoohil, Hook Head |
-| **L'Irlande du Nord** | Titanic Belfast, Chaussée des Géants | Église et puits de Cranfield, Peace Bridge (Derry) · *propositions :* Dunluce, Carrick-a-Rede, Dark Hedges | Cascade d'Ess-na-Crub (Glenariff) · *proposition :* Mussenden |
+| **Le Sud** | Fungie (Dingle), Rocher de Cashel | Château du roi Jean (Limerick), Château de Ross, Château de Kilkenny, Cathédrale St Fin Barre's (Cork), Tour de Reginald (Waterford) · *propositions :* Blarney, Gap of Dunloe | Cascade de Torc · *propositions :* Skellig Michael, Fastnet, Mizen Head, Carrauntoohil, Hook Head |
+| **L'Irlande du Nord** | Titanic Belfast, Chaussée des Géants | Église et puits de Cranfield, Peace Bridge (Derry), Hôtel de ville de Belfast · *propositions :* Dunluce, Carrick-a-Rede, Dark Hedges | Cascade d'Ess-na-Crub (Glenariff) · *proposition :* Mussenden |
 | **L'Ouest et le Nord-Ouest** | Wormhole (Inis Mór, Aran), Église des Nonnes (Clonmacnoise), Falaises de Moher, Connemara, Glenveagh | Jetée de Nimmo (Galway), Lough Conn Drive · *propositions :* Poulnabrone, Dún Aonghasa, Kylemore, Croagh Patrick, Benbulbin, Bunratty | Slieve League · *propositions :* Dunguaire, Ashford, Errigal, Malin Head, Fanad Head |
-| **Dublin et ses environs** | Newgrange, Phare du Baily (Howth), Glendalough (site + lac) | Village des mineurs, Cairns de Loughanleagh · *propositions :* Temple Bar, Colline de Tara | Cascade de Powerscourt |
+| **Dublin et ses environs** | Newgrange, Phare du Baily (Howth), Glendalough (site + lac) | Village des mineurs, Cairns de Loughanleagh, Ha'penny Bridge et Temple Bar · *proposition :* Colline de Tara | Cascade de Powerscourt |
 
-État : **tous les lieux de la liste de départ sont modélisés**. Les propositions encore en cairn
+Monuments de ville (demandés par Yann) : Ha'penny Bridge + Temple Bar (un seul lieu : à 100 m
+l'un de l'autre, ils se chevaucheraient à l'échelle du jeu), Hôtel de ville de Belfast, St Fin
+Barre's, Tour de Reginald. Comme toutes les routes d'une ville convergent vers son centre, ces
+monuments sont **décalés de 20 à 50 u** hors des routes (coordonnées réelles en commentaire).
+
+État : **tous les lieux de la liste de départ et les monuments de ville sont modélisés**. Les propositions encore en cairn
 provisoire (photographiables) : Blarney, Gap of Dunloe, Mizen Head, Carrauntoohil, Hook Head,
 Dunluce, Carrick-a-Rede, Mussenden, Dún Aonghasa, Kylemore, Croagh Patrick, Benbulbin, Bunratty,
-Dunguaire, Ashford, Errigal, Malin Head, Fanad Head, Temple Bar, Colline de Tara
+Dunguaire, Ashford, Errigal, Malin Head, Fanad Head, Colline de Tara
 (fiches prêtes dans `docs/ROADMAP.md`).
 
 Critères pour ajouter un lieu : **emblématique**, **visuellement distinctif** en low-poly, à plus

@@ -151,7 +151,7 @@ export const STATIONS = {
   /** Distance (u) à la gare pour pouvoir prendre le train. */
   INTERACT_DISTANCE: 9,
   /** Rayon (u) autour d'une gare sans maisons ni arbres générés. */
-  CLEAR_RADIUS: 20,
+  CLEAR_RADIUS: 27, // > demi-longueur des voies (25 u)
   /** Durée (ms) du fondu au noir pendant le voyage en train. */
   TRAVEL_MS: 2600,
 };

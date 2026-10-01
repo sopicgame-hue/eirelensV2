@@ -7,6 +7,7 @@
  * l'ordre ci-dessous ne sert qu'à départager.
  *
  * Origine : "liste" = liste de départ de Yann (obligatoire) ;
+ *           "demandé" = monument de grande ville demandé par Yann ;
  *           "proposition" = ajouté par le game designer (peut être retiré).
  */
 import { LandmarkDef } from './types';
@@ -24,6 +25,8 @@ import { fastnet } from './fastnet'; // proposition
 import { mizenHead } from './mizen_head'; // proposition
 import { carrauntoohil } from './carrauntoohil'; // proposition
 import { hookHead } from './hook_head'; // proposition
+import { stFinBarres } from './st_fin_barres'; // demandé ◉ (monument de Cork)
+import { reginaldsTower } from './reginalds_tower'; // demandé ◉ (monument de Waterford)
 // --- L'Irlande du Nord
 import { titanicBelfast } from './titanic_belfast'; // liste ☆
 import { giantsCauseway } from './giants_causeway'; // liste ☆
@@ -34,6 +37,7 @@ import { dunluceCastle } from './dunluce_castle'; // proposition
 import { carrickARede } from './carrick_a_rede'; // proposition
 import { darkHedges } from './dark_hedges'; // proposition
 import { mussendenTemple } from './mussenden_temple'; // proposition
+import { belfastCityHall } from './belfast_city_hall'; // demandé ◉ (monument de Belfast)
 // --- L'Ouest et le Nord-Ouest
 import { wormholeAran } from './wormhole_aran'; // liste ☆
 import { clonmacnoise } from './clonmacnoise'; // liste ☆ (église des Nonnes)
@@ -61,7 +65,7 @@ import { glendalough } from './glendalough'; // liste ☆ (site + lac)
 import { minersVillage } from './miners_village'; // liste ◉
 import { loughanleagh } from './loughanleagh'; // liste ◉
 import { powerscourtWaterfall } from './powerscourt_waterfall'; // liste ♥
-import { templeBar } from './temple_bar'; // proposition
+import { hapennyBridge } from './hapenny_bridge'; // demandé ◉ (monument de Dublin, inclut Temple Bar)
 import { hillOfTara } from './hill_of_tara'; // proposition
 
 export const LANDMARKS: LandmarkDef[] = [
@@ -79,6 +83,8 @@ export const LANDMARKS: LandmarkDef[] = [
   mizenHead,
   carrauntoohil,
   hookHead,
+  stFinBarres,
+  reginaldsTower,
   // L'Irlande du Nord
   titanicBelfast,
   giantsCauseway,
@@ -89,6 +95,7 @@ export const LANDMARKS: LandmarkDef[] = [
   carrickARede,
   darkHedges,
   mussendenTemple,
+  belfastCityHall,
   // L'Ouest et le Nord-Ouest
   wormholeAran,
   clonmacnoise,
@@ -116,6 +123,6 @@ export const LANDMARKS: LandmarkDef[] = [
   minersVillage,
   loughanleagh,
   powerscourtWaterfall,
-  templeBar,
+  hapennyBridge,
   hillOfTara,
 ];

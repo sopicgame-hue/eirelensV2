@@ -36,6 +36,7 @@ export const PALETTE = {
   gold: 0xe7c14e,
   lighthouseRed: 0xc63a2f,
   quartz: 0xf7f7f2,
+  copperGreen: 0x6fae9a, // cuivre oxydé des dômes
   // Façades irlandaises (maisons colorées)
   facadeA: 0xe94f4f,
   facadeB: 0x4f8fe9,

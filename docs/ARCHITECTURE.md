@@ -68,7 +68,8 @@ sans monde ni boucle de jeu. `App.tsx` choisit entre `GameView` et `AtelierView`
    (rayon 3 chunks ≈ 500 u), 1 par frame max, déchargés en s'éloignant.
 4. **Scatter** : arbres, buissons, rochers semés de façon déterministe sur chaque chunk
    (InstancedMesh + collisions), hors routes, villes et zones des monuments.
-5. **Towns** : toutes les maisons du pays en 2 draw calls (instancing + couleur par instance).
+5. **Towns** : maisons, églises (villes de taille ≥ 1) et pubs (toutes les villes) du pays en
+   6 draw calls (instancing + couleur par instance ; modèles dans `models/townBuildings.ts`).
 6. **Roads** : un seul mesh pour toutes les routes.
 7. **LandmarkManager** : construit les monuments à < 650 u (1 par frame), les détruit à > 800 u,
    et appelle leur `animate` (cascades, dauphin) tant qu'ils sont chargés.
