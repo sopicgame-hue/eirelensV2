@@ -1,0 +1,9 @@
+{
+  "name": "EireLens",
+  "short_name": "EireLens",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1f3a2b",
+  "theme_color": "#1f3a2b",
+  "start_url": "."
+}
